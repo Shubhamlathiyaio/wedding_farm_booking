@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../../controllers/auth_controller.dart';
+import '../../../../utils/constants/app_colors.dart';
+import '../../../widgets/custom_buttons.dart';
+
+class CustomerProfileScreen extends StatelessWidget {
+  const CustomerProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authCtrl = Get.find<AuthController>();
+    final user = Supabase.instance.client.auth.currentUser;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Profile'),
+        automaticallyImplyLeading: false,
+      ),
+      body: Obx(() {
+        final profile = authCtrl.profile.value;
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Avatar
+            Center(
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    profile?.fullName.isNotEmpty == true ? profile!.fullName[0].toUpperCase() : '?',
+                    style: GoogleFonts.poppins(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                profile?.fullName ?? 'User',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  profile?.role.toUpperCase() ?? 'CUSTOMER',
+                  style: GoogleFonts.poppins(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Info fields
+            _buildInfoTile(Icons.email_outlined, 'Email', user?.email ?? '—'),
+            const Divider(height: 1),
+            _buildInfoTile(Icons.phone_outlined, 'Phone', profile?.phone ?? '—'),
+            const Divider(height: 1),
+            _buildInfoTile(Icons.badge_outlined, 'Account Role', profile?.isOwner == true ? 'Farm Owner' : 'Customer'),
+
+            const SizedBox(height: 32),
+
+            AppButton(
+              title: 'Log Out',
+              type: AppButtonType.danger,
+              icon: Icons.logout_rounded,
+              onPressed: () => _showLogoutDialog(context, authCtrl),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
+                ),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthController authCtrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Log Out?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(
+          'Are you sure you want to log out?',
+          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              Navigator.pop(ctx);
+              authCtrl.signOut();
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
+  }
+}
