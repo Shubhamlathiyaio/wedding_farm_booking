@@ -6,6 +6,7 @@ class EdgeFunctionService {
   final SupabaseClient _client = Supabase.instance.client;
 
   Future<Map<String, dynamic>> confirmTokenPayment(String bookingId) async {
+    await Supabase.instance.client.auth.refreshSession();
     final response = await _client.functions.invoke(
       AppConfig.confirmTokenPaymentFn,
       body: {'booking_id': bookingId},

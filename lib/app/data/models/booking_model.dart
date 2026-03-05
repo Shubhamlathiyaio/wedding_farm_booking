@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'farm_model.dart';
 
 class BookingModel {
@@ -62,14 +64,14 @@ class BookingModel {
   }
 
   Map<String, dynamic> toInsertJson() => {
-    'farm_id': farmId,
-    'customer_id': customerId,
-    'event_date': eventDate.toIso8601String().split('T').first,
-    'guest_count': guestCount,
-    'notes': notes,
-    'status': 'pending',
-    'token_paid': false,
-    'token_amount': tokenAmount,
-    'total_amount': totalAmount,
-  };
+        'farm_id': farmId,
+        'customer_id': customerId,
+        'event_date': eventDate.toIso8601String().split('T').first,
+        'guest_count': guestCount,
+        'notes': notes,
+        'status': 'pending',
+        'token_paid': false,
+        'token_amount': tokenAmount,
+        'total_amount': totalAmount,
+      };
 }

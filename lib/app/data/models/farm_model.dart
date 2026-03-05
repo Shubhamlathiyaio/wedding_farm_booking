@@ -27,9 +27,9 @@ class FarmModel {
 
   factory FarmModel.fromJson(Map<String, dynamic> json) {
     return FarmModel(
-      id: json['id'] as String,
-      ownerId: json['owner_id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      ownerId: json['owner_id'] as String? ?? '',
+      name: json['name'] as String? ?? 'Unnamed Farm',
       description: json['description'] as String? ?? '',
       location: json['location'] as String? ?? '',
       category: json['category'] as String? ?? 'Lawn',
@@ -42,17 +42,17 @@ class FarmModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'owner_id': ownerId,
-    'name': name,
-    'description': description,
-    'location': location,
-    'category': category,
-    'price_per_day': pricePerDay,
-    'token_amount': tokenAmount,
-    'rating': rating,
-    'photo_urls': photoUrls,
-    'is_available': isAvailable,
-  };
+        'owner_id': ownerId,
+        'name': name,
+        'description': description,
+        'location': location,
+        'category': category,
+        'price_per_day': pricePerDay,
+        'token_amount': tokenAmount,
+        'rating': rating,
+        'photo_urls': photoUrls,
+        'is_available': isAvailable,
+      };
 
   String get firstPhotoUrl => photoUrls.isNotEmpty ? photoUrls.first : '';
 }

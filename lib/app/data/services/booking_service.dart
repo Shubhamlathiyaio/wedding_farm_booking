@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking_model.dart';
 import '../../global/app_config.dart';

@@ -43,7 +43,7 @@ class BookingController extends GetxController {
     if (userId == null || selectedDate.value == null) return;
 
     isProcessing.value = true;
-    try {
+    // try {
       final booking = BookingModel(
         id: '',
         farmId: farm.id,
@@ -63,11 +63,11 @@ class BookingController extends GetxController {
       Get.back();
       Get.back();
       _showSuccess('Token payment confirmed! Booking is now active.');
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      isProcessing.value = false;
-    }
+    // } catch (e) {
+    //   _showError(e.toString());
+    // } finally {
+    //   isProcessing.value = false;
+    // }
   }
 
   void _showError(String message) {

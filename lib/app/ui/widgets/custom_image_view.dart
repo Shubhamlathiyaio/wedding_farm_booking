@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ImageView extends StatelessWidget {
   const ImageView(
@@ -25,24 +26,48 @@ class ImageView extends StatelessWidget {
       return _buildPlaceholder();
     }
 
+    final bool isSvg = imagePath!.toLowerCase().endsWith('.svg');
+
     Widget widget;
     if (imagePath!.startsWith('http')) {
-      widget = CachedNetworkImage(
-        imageUrl: imagePath!,
-        fit: fit,
-        width: width,
-        height: height,
-        placeholder: (_, __) => _buildPlaceholder(),
-        errorWidget: (_, __, ___) => _buildPlaceholder(),
-      );
+      if (isSvg) {
+        widget = SvgPicture.network(
+          imagePath!,
+          fit: fit,
+          width: width,
+          height: height,
+          colorFilter: color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+          placeholderBuilder: (_) => _buildPlaceholder(),
+        );
+      } else {
+        widget = CachedNetworkImage(
+          imageUrl: imagePath!,
+          fit: fit,
+          width: width,
+          height: height,
+          placeholder: (_, __) => _buildPlaceholder(),
+          errorWidget: (_, __, ___) => _buildPlaceholder(),
+        );
+      }
     } else {
-      widget = Image.asset(
-        imagePath!,
-        fit: fit,
-        width: width,
-        height: height,
-        color: color,
-      );
+      if (isSvg) {
+        widget = SvgPicture.asset(
+          imagePath!,
+          fit: fit,
+          width: width,
+          height: height,
+          colorFilter: color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+          placeholderBuilder: (_) => _buildPlaceholder(),
+        );
+      } else {
+        widget = Image.asset(
+          imagePath!,
+          fit: fit,
+          width: width,
+          height: height,
+          color: color,
+        );
+      }
     }
 
     if (radius != null) {
