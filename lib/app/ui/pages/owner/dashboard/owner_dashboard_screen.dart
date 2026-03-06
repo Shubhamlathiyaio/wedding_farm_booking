@@ -326,24 +326,41 @@ class _PendingRequestCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
+          AppButton(
+            title: 'View Details',
+            type: AppButtonType.outline,
+            onPressed: () => _showDetailsSheet(context),
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(
-                child: AppButton(
-                  title: 'View Details',
-                  type: AppButtonType.outline,
-                  onPressed: () => _showDetailsSheet(context),
+              if (booking.status == 'pending') ...[
+                Expanded(
+                  child: AppButton(
+                    title: 'Approve',
+                    isLoading: controller.isLoading.value,
+                    onPressed: () => controller.approveBooking(booking.id),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppButton(
-                  title: 'Release Farm',
-                  type: AppButtonType.danger,
-                  isLoading: controller.isReleasing.value,
-                  onPressed: () => _showReleaseDialog(context),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AppButton(
+                    title: 'Reject',
+                    type: AppButtonType.danger,
+                    isLoading: controller.isLoading.value,
+                    onPressed: () => _showRejectDialog(context),
+                  ),
                 ),
-              ),
+              ] else ...[
+                Expanded(
+                  child: AppButton(
+                    title: 'Release Farm',
+                    type: AppButtonType.danger,
+                    isLoading: controller.isReleasing.value,
+                    onPressed: () => _showReleaseDialog(context),
+                  ),
+                ),
+              ],
             ],
           ),
         ],
@@ -418,6 +435,34 @@ class _PendingRequestCard extends StatelessWidget {
               controller.releaseFarm(booking.id);
             },
             child: const Text('Release'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Reject Booking?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(
+          'This will reject the booking and cancel the request. This action cannot be undone.',
+          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () {
+              Navigator.pop(ctx);
+              controller.rejectBooking(booking.id);
+            },
+            child: const Text('Reject'),
           ),
         ],
       ),

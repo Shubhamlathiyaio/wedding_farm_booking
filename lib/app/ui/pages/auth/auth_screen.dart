@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wedding_farm_booking/app/ui/widgets/custom_image_view.dart';
 import 'package:wedding_farm_booking/gen/assets.gen.dart';
-
 import '../../../controllers/auth_controller.dart';
 import '../../../utils/constants/app_colors.dart';
 import '../../widgets/custom_buttons.dart';

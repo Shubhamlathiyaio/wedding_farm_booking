@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../controllers/auth_controller.dart';
 import '../../../../utils/constants/app_colors.dart';
 import '../../../widgets/custom_buttons.dart';
+import '../../owner/profile/owner_upi_setup_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
@@ -31,7 +32,7 @@ class CustomerProfileScreen extends StatelessWidget {
               child: Container(
                 width: 90,
                 height: 90,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
@@ -85,6 +86,13 @@ class CustomerProfileScreen extends StatelessWidget {
             const Divider(height: 1),
             _buildInfoTile(Icons.badge_outlined, 'Account Role', profile?.isOwner == true ? 'Farm Owner' : 'Customer'),
 
+            if (profile?.isOwner == true) ...[
+              const Divider(height: 1),
+              _buildActionTile(Icons.qr_code_scanner, 'UPI Payment Settings', () {
+                Get.to(() => const OwnerUpiSetupScreen());
+              }),
+            ],
+
             const SizedBox(height: 32),
 
             AppButton(
@@ -126,6 +134,32 @@ class CustomerProfileScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionTile(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.grey, size: 20),
+          ],
+        ),
       ),
     );
   }

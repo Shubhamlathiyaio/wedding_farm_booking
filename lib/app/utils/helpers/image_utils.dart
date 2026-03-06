@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -39,21 +38,7 @@ class ImageUtils {
 
     if (image == null) return null;
 
-    // Crop image
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: image.path,
-      aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-      uiSettings: [
-        AndroidUiSettings(toolbarTitle: 'Crop Photo', toolbarColor: AppColors.primary, toolbarWidgetColor: Colors.white, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: false),
-        IOSUiSettings(
-          title: 'Crop Photo',
-        ),
-      ],
-    );
-
-    if (croppedFile == null) return null;
-
-    return croppedFile.path;
+    return image.path;
   }
 
   static Widget showImagePickerSheet({

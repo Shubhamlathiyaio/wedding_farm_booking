@@ -223,7 +223,7 @@ class FarmCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.toNamed(AppRoutes.farmDetail, arguments: farm.id),
+      onTap: () => Get.toNamed(AppRoutes.farmDetail, arguments: farm),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(

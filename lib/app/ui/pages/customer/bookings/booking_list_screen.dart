@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../../screens/upi_payment_screen.dart';
 import '../../../../controllers/booking_controller.dart';
 import '../../../../data/models/booking_model.dart';
 import '../../../../utils/constants/app_colors.dart';
@@ -47,7 +48,7 @@ class BookingListScreen extends StatelessWidget {
           Container(
             width: 100,
             height: 100,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
@@ -85,6 +86,7 @@ class _BookingCard extends StatelessWidget {
       'token_paid' => AppColors.tokenPaid,
       'released' => AppColors.released,
       'confirmed' => AppColors.primary,
+      'approved' => AppColors.approved,
       _ => AppColors.pending,
     };
   }
@@ -94,6 +96,7 @@ class _BookingCard extends StatelessWidget {
       'token_paid' => 'Token Paid',
       'released' => 'Released',
       'confirmed' => 'Confirmed',
+      'approved' => 'Approved',
       _ => 'Pending',
     };
   }
@@ -201,11 +204,74 @@ class _BookingCard extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  // If approved, show Pay Token button
+                  if (booking.status == 'approved') ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        onPressed: () => _showPaymentSheet(context, booking),
+                        child: Text(
+                          'Pay Token',
+                          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                    )
+                  ],
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPaymentSheet(BuildContext context, BookingModel booking) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Select Payment Method', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.credit_card, color: AppColors.primary),
+              title: Text('Credit/Debit Card (Stripe)', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(ctx);
+                // Call Stripe checkout via EdgeFunctionService (Assume user has edge fn)
+                // For this example, we assume Stripe flow is handled elsewhere or you can invoke it from controller.
+                Get.snackbar('Coming Soon', 'Stripe checkout from here is pending implementation.');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
+              title: Text('UPI Manual Transfer', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Get.to(() => UpiPaymentScreen(
+                      bookingId: booking.id,
+                      ownerId: booking.farm!.ownerId,
+                      farmId: booking.farmId,
+                      paymentType: 'token',
+                      amount: booking.tokenAmount,
+                    ));
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

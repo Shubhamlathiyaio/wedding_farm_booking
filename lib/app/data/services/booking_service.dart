@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/booking_model.dart';
+
 import '../../global/app_config.dart';
+import '../models/booking_model.dart';
 
 class BookingService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -20,18 +19,22 @@ class BookingService {
 
   // Owner queries
   Future<int> getUpcomingCount(String ownerId) async {
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final response = await _client.from(AppConfig.bookingsTable).select('id, farms!inner(owner_id)').eq('farms.owner_id', ownerId).gte('event_date', today).eq('status', 'token_paid');
+    final response =
+        await _client.from(AppConfig.bookingsTable).select('*, farms!inner(owner_id)').eq('farms.owner_id', ownerId).eq('status', 'token_paid').gte('event_date', DateTime.now().toIso8601String());
     return (response as List).length;
   }
 
   Future<int> getActiveCount(String ownerId) async {
-    final response = await _client.from(AppConfig.bookingsTable).select('id, farms!inner(owner_id)').eq('farms.owner_id', ownerId).eq('status', 'confirmed');
+    final response = await _client.from(AppConfig.bookingsTable).select('*, farms!inner(owner_id)').eq('farms.owner_id', ownerId).eq('status', 'confirmed');
     return (response as List).length;
   }
 
   Future<List<BookingModel>> getPendingBookings(String ownerId) async {
-    final response = await _client.from(AppConfig.bookingsTable).select('*, farms!inner(name, owner_id, photo_urls), profiles(full_name)').eq('farms.owner_id', ownerId).eq('status', 'pending');
+    final response = await _client
+        .from(AppConfig.bookingsTable)
+        .select('*, farms!inner(name, location, owner_id), customer:profiles!bookings_customer_id_fkey(full_name, phone)')
+        .eq('farms.owner_id', ownerId)
+        .eq('status', 'pending');
 
     return (response as List).map((e) => BookingModel.fromJson(e as Map<String, dynamic>)).toList();
   }

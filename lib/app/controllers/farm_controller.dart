@@ -42,15 +42,18 @@ class FarmController extends GetxController {
     required double pricePerDay,
     required double tokenAmount,
     required String photoUrl,
-    File? imageFile,
+    List<File>? imageFiles,
   }) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
     isAdding.value = true;
     try {
-      String? uploadedImageUrl;
-      if (imageFile != null) {
-        uploadedImageUrl = await ImageUtils.uploadFarmImage(imageFile.path);
+      final List<String> uploadedUrls = [];
+      if (imageFiles != null && imageFiles.isNotEmpty) {
+        for (final file in imageFiles) {
+          final url = await ImageUtils.uploadFarmImage(file.path);
+          if (url != null) uploadedUrls.add(url);
+        }
       }
 
       final farmData = {
@@ -62,7 +65,7 @@ class FarmController extends GetxController {
         'price_per_day': pricePerDay,
         'token_amount': tokenAmount,
         'photo_urls': [
-          if (uploadedImageUrl != null) uploadedImageUrl,
+          ...uploadedUrls,
           if (photoUrl.isNotEmpty) photoUrl,
         ],
         'is_available': true,

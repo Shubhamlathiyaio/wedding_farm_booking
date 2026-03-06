@@ -39,6 +39,13 @@ class AuthController extends GetxController {
     } catch (_) {}
   }
 
+  Future<void> reloadProfile() async {
+    final userId = currentUser.value?.id;
+    if (userId != null) {
+      await _loadProfile(userId);
+    }
+  }
+
   void _navigate() {
     if (profile.value?.isOwner == true) {
       Get.offAllNamed(AppRoutes.ownerShell);

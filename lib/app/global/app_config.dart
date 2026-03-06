@@ -20,4 +20,5 @@ class AppConfig {
   static const String createPaymentIntentFn = 'create-payment-intent';
   static const String createFinalPaymentIntentFn = 'create-final-payment-intent';
   static const String stripeWebhookFn = 'stripe-webhook';
+  static const String processPaymentFn = 'process-payment';
 }

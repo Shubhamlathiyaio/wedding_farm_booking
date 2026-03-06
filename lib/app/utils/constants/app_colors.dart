@@ -16,6 +16,7 @@ class AppColors {
   static const Color pending = Color(0xFFF57C00);
   static const Color tokenPaid = Color(0xFFE65100);
   static const Color released = Color(0xFF9E9E9E);
+  static const Color approved = Color(0xFF43A047);
   static const Color divider = Color(0xFFE0E0E0);
   static const Color cardShadow = Color(0x1A000000);
 }

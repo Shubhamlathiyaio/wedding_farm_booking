@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/upi_payment_service.dart';
 import '../data/models/booking_model.dart';
 import '../data/models/farm_model.dart';
 import '../data/services/booking_service.dart';
-import '../data/services/edge_function_service.dart';
 
 class BookingController extends GetxController {
   final BookingService _bookingService = BookingService();
-  final EdgeFunctionService _edgeFnService = EdgeFunctionService();
+  final UPIPaymentService _upiService = UPIPaymentService();
 
   final RxList<BookingModel> bookings = <BookingModel>[].obs;
+  final RxList<Map<String, dynamic>> paymentHistory = <Map<String, dynamic>>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isProcessing = false.obs;
 
@@ -38,12 +39,12 @@ class BookingController extends GetxController {
     }
   }
 
-  Future<void> confirmAndPayToken({required FarmModel farm}) async {
+  Future<void> requestBooking({required FarmModel farm}) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null || selectedDate.value == null) return;
 
     isProcessing.value = true;
-    // try {
+    try {
       final booking = BookingModel(
         id: '',
         farmId: farm.id,
@@ -56,18 +57,25 @@ class BookingController extends GetxController {
         totalAmount: farm.pricePerDay,
       );
 
-      final created = await _bookingService.createBooking(booking);
-      await _edgeFnService.confirmTokenPayment(created.id);
+      await _bookingService.createBooking(booking);
 
       await loadBookings();
       Get.back();
       Get.back();
-      _showSuccess('Token payment confirmed! Booking is now active.');
-    // } catch (e) {
-    //   _showError(e.toString());
-    // } finally {
-    //   isProcessing.value = false;
-    // }
+      _showSuccess('Booking requested! Waiting for owner approval.');
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  Future<void> loadPaymentHistory(String bookingId) async {
+    try {
+      paymentHistory.value = await _upiService.getPaymentHistory(bookingId);
+    } catch (e) {
+      debugPrint('Error loading payment history: $e');
+    }
   }
 
   void _showError(String message) {

@@ -57,6 +57,36 @@ class OwnerDashboardController extends GetxController {
     }
   }
 
+  Future<void> approveBooking(String bookingId) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    isLoading.value = true;
+    try {
+      await Supabase.instance.client.from('bookings').update({'status': 'approved'}).eq('id', bookingId).eq('owner_id', userId);
+      await loadDashboard();
+      _showSuccess('Booking request approved. Waiting for customer to pay the token.');
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> rejectBooking(String bookingId) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    isLoading.value = true;
+    try {
+      await Supabase.instance.client.from('bookings').update({'status': 'cancelled'}).eq('id', bookingId).eq('owner_id', userId);
+      await loadDashboard();
+      _showSuccess('Booking request rejected.');
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void _showError(String message) {
     Get.snackbar(
       'Error',

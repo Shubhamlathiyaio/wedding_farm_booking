@@ -26,7 +26,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
   final tokenCtrl = TextEditingController();
   final photoUrlCtrl = TextEditingController();
   String selectedCategory = 'Lawn';
-  File? selectedImage;
+  final List<File> selectedImages = [];
 
   final formKey = GlobalKey<FormState>();
 
@@ -46,7 +46,10 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
     final controller = Get.find<FarmController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Farm')),
+      appBar: AppBar(
+        title: Text('Add New Farm', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -54,6 +57,17 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Farm Photos',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildImagePicker(),
+              const SizedBox(height: 24),
               Text(
                 'Farm Information',
                 style: GoogleFonts.poppins(
@@ -63,8 +77,6 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildImagePicker(),
-              const SizedBox(height: 24),
               TextInputField(
                 type: InputType.name,
                 controller: nameCtrl,
@@ -121,19 +133,16 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                 prefixIcon: const Icon(Icons.description_outlined),
                 validator: (v) => v == null || v.isEmpty ? 'Description is required' : null,
               ),
-              const SizedBox(height: 14),
-              TextInputField(
-                type: InputType.name,
-                controller: photoUrlCtrl,
-                hintLabel: 'Photo URL (optional)',
-                prefixIcon: const Icon(Icons.photo_outlined),
-              ),
               const SizedBox(height: 32),
               Obx(() => AppButton(
                     title: 'Add Farm',
                     isLoading: controller.isAdding.value,
                     icon: Icons.check_circle_outline,
                     onPressed: () {
+                      if (selectedImages.isEmpty) {
+                        Get.snackbar('Photos Required', 'Please add at least one farm photo.', backgroundColor: Colors.orange, colorText: Colors.white);
+                        return;
+                      }
                       if (formKey.currentState!.validate()) {
                         controller.addFarm(
                           name: nameCtrl.text.trim(),
@@ -143,7 +152,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                           pricePerDay: double.tryParse(priceCtrl.text.trim()) ?? 0.0,
                           tokenAmount: double.tryParse(tokenCtrl.text.trim()) ?? 0.0,
                           photoUrl: photoUrlCtrl.text.trim(),
-                          imageFile: selectedImage,
+                          imageFiles: selectedImages,
                         );
                       }
                     },
@@ -157,64 +166,61 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
   }
 
   Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Farm Image',
-          style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+    return SizedBox(
+      height: 120,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: selectedImages.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          if (index == selectedImages.length) {
+            return _buildAddPhotoButton();
+          }
+          return _buildPhotoTile(index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildAddPhotoButton() {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        width: 120,
+        decoration: BoxDecoration(
+          color: AppColors.greyLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.divider, style: BorderStyle.solid),
         ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.greyLight,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.divider),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add_a_photo_outlined, color: AppColors.primary),
+            const SizedBox(height: 4),
+            Text('Add Photo', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoTile(int index) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.file(selectedImages[index], width: 120, height: 120, fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => setState(() => selectedImages.removeAt(index)),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+              child: const Icon(Icons.close, color: Colors.white, size: 16),
             ),
-            child: selectedImage != null
-                ? Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          selectedImage!,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => setState(() => selectedImage = null),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close, color: Colors.white, size: 20),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_a_photo_outlined, size: 40, color: AppColors.primary),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap to add farm photo',
-                        style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
           ),
         ),
       ],
@@ -225,7 +231,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
     final path = await ImageUtils.pickImage(context);
     if (path != null) {
       setState(() {
-        selectedImage = File(path);
+        selectedImages.add(File(path));
       });
     }
   }

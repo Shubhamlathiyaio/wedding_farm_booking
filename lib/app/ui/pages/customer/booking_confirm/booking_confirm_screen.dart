@@ -20,7 +20,7 @@ class BookingConfirmScreen extends StatelessWidget {
     final controller = Get.find<BookingController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Confirm Booking')),
+      appBar: AppBar(title: const Text('Request Booking')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -109,7 +109,7 @@ class BookingConfirmScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'This token amount is non-refundable once paid',
+                        'You will need to pay this token amount once the owner approves your request.',
                         style: GoogleFonts.poppins(
                           color: AppColors.error,
                           fontSize: 12,
@@ -124,9 +124,9 @@ class BookingConfirmScreen extends StatelessWidget {
               const Spacer(),
 
               Obx(() => AppButton(
-                    title: 'Confirm & Pay Token',
+                    title: 'Request Booking',
                     isLoading: controller.isProcessing.value,
-                    onPressed: () => controller.confirmAndPayToken(farm: farm),
+                    onPressed: () => controller.requestBooking(farm: farm),
                   )),
               const SizedBox(height: 12),
             ],

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'farm_model.dart';
 
 class BookingModel {
@@ -42,7 +40,9 @@ class BookingModel {
     }
 
     String? custName;
-    if (json['profiles'] != null) {
+    if (json['customer'] != null) {
+      custName = (json['customer'] as Map<String, dynamic>)['full_name'] as String?;
+    } else if (json['profiles'] != null) {
       custName = (json['profiles'] as Map<String, dynamic>)['full_name'] as String?;
     }
 
