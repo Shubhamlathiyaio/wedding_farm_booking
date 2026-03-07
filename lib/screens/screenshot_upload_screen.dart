@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:wedding_farm_booking/app/routes/app_routes.dart';
 
+import '../app/utils/helpers/image_utils.dart';
 import '../services/upi_payment_service.dart';
 
 class ScreenshotUploadScreen extends StatefulWidget {
@@ -33,49 +34,30 @@ class _ScreenshotUploadScreenState extends State<ScreenshotUploadScreen> {
   final _utrController = TextEditingController();
   File? _image;
   bool _isUploading = false;
-  final _picker = ImagePicker();
 
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
+  Future<void> _pickImage() async {
+    final path = await ImageUtils.pickImage(context);
+    if (path != null) {
       setState(() {
-        _image = File(pickedFile.path);
+        _image = File(path);
       });
     }
   }
 
-  void _showImageSourceActionSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
-              
-              onTap: () {
-                Navigator.of(context).pop();
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: const Text('Camera'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _pickImage(ImageSource.camera);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _submit() async {
-    if (_image == null) {
+    final imageFile = _image;
+    if (imageFile == null) {
       Get.snackbar('Error', 'Please pick a screenshot of your payment');
+      return;
+    }
+
+    final bId = widget.bookingId;
+    final cId = widget.customerId;
+    final oId = widget.ownerId;
+    final fId = widget.farmId;
+
+    if (bId.isEmpty || cId.isEmpty || oId.isEmpty || fId.isEmpty) {
+      Get.snackbar('Error', 'Missing required payment information');
       return;
     }
 
@@ -83,37 +65,37 @@ class _ScreenshotUploadScreenState extends State<ScreenshotUploadScreen> {
 
     try {
       await _upiService.submitUpiPaymentRequest(
-        bookingId: widget.bookingId,
-        customerId: widget.customerId,
-        ownerId: widget.ownerId,
-        farmId: widget.farmId,
+        bookingId: bId,
+        customerId: cId,
+        ownerId: oId,
+        farmId: fId,
         paymentType: widget.paymentType,
         amount: widget.amount,
         upiRefNumber: _utrController.text.trim().isEmpty ? null : _utrController.text.trim(),
-        screenshotFile: _image!,
+        screenshotFile: imageFile,
       );
 
-      Get.offAllNamed('/home'); // Or wherever appropriate
-      Get.snackbar('Success', 'Payment request submitted! Waiting for owner confirmation.', backgroundColor: const Color(0xFF2E7D32), colorText: Colors.white);
-
-      // Optionally show a "Waiting for confirmation" screen
-      // For now, let's just go home and show snackbar.
+      Get.snackbar('Request Sent', 'Payment proof submitted for owner verification.', backgroundColor: const Color(0xFF8B5E3C), colorText: Colors.white);
+      Get.offAllNamed(AppRoutes.customerShell);
     } catch (e) {
       Get.snackbar('Error', 'Failed to upload: ${e.toString()}');
     } finally {
-      setState(() => _isUploading = false);
+      if (mounted) {
+        setState(() => _isUploading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF8B5E3C);
+    final imageFile = _image;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload Screenshot'),
+        title: const Text('Upload Screenshot', style: TextStyle(color: Colors.white)),
         backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
@@ -133,7 +115,7 @@ class _ScreenshotUploadScreenState extends State<ScreenshotUploadScreen> {
                 ),
                 const SizedBox(height: 24),
                 GestureDetector(
-                  onTap: () => _showImageSourceActionSheet(context),
+                  onTap: _pickImage,
                   child: Container(
                     width: double.infinity,
                     height: 200,
@@ -142,10 +124,10 @@ class _ScreenshotUploadScreenState extends State<ScreenshotUploadScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
-                    child: _image != null
+                    child: imageFile != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.file(_image!, fit: BoxFit.cover),
+                            child: Image.file(imageFile, fit: BoxFit.cover),
                           )
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -157,9 +139,9 @@ class _ScreenshotUploadScreenState extends State<ScreenshotUploadScreen> {
                           ),
                   ),
                 ),
-                if (_image != null)
+                if (imageFile != null)
                   TextButton.icon(
-                    onPressed: () => _showImageSourceActionSheet(context),
+                    onPressed: _pickImage,
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text('Change Image'),
                     style: TextButton.styleFrom(foregroundColor: primaryColor),

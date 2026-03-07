@@ -1,4 +1,57 @@
+import 'package:flutter/material.dart';
+
+import '../../utils/constants/app_colors.dart';
 import 'farm_model.dart';
+
+enum BookingStatus {
+  pending,
+  booked,
+  paid,
+  released,
+  cancelled;
+
+  String get label {
+    switch (this) {
+      case BookingStatus.pending:
+        return 'Pending';
+      case BookingStatus.booked:
+        return 'Booked';
+      case BookingStatus.paid:
+        return 'Paid';
+      case BookingStatus.released:
+        return 'Released';
+      case BookingStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case BookingStatus.pending:
+        return AppColors.pending;
+      case BookingStatus.booked:
+        return Colors.teal;
+      case BookingStatus.paid:
+        return AppColors.primary;
+      case BookingStatus.released:
+        return Colors.blue;
+      case BookingStatus.cancelled:
+        return AppColors.error;
+    }
+  }
+}
+
+enum PaymentStatus {
+  pending,
+  confirmed,
+  rejected,
+}
+
+enum PaymentType {
+  token,
+  remaining,
+  full,
+}
 
 class BookingModel {
   final String id;
@@ -6,8 +59,9 @@ class BookingModel {
   final String customerId;
   final DateTime eventDate;
   final int guestCount;
-  final String? notes;
-  final String status; // pending | token_paid | released | confirmed
+  final String? notes; // Customer notes
+  final String? ownerNote; // Owner notes
+  final BookingStatus status;
   final bool tokenPaid;
   final double tokenAmount;
   final double totalAmount;
@@ -16,6 +70,8 @@ class BookingModel {
   // Joined fields
   final FarmModel? farm;
   final String? customerName;
+  final String? customerPhone;
+  final String? ownerPhone;
 
   const BookingModel({
     required this.id,
@@ -24,6 +80,7 @@ class BookingModel {
     required this.eventDate,
     required this.guestCount,
     this.notes,
+    this.ownerNote,
     required this.status,
     required this.tokenPaid,
     required this.tokenAmount,
@@ -31,6 +88,8 @@ class BookingModel {
     this.createdAt,
     this.farm,
     this.customerName,
+    this.customerPhone,
+    this.ownerPhone,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -40,10 +99,20 @@ class BookingModel {
     }
 
     String? custName;
+    String? phone;
     if (json['customer'] != null) {
-      custName = (json['customer'] as Map<String, dynamic>)['full_name'] as String?;
+      final cust = json['customer'] as Map<String, dynamic>;
+      custName = cust['full_name'] as String?;
+      phone = cust['phone'] as String?;
     } else if (json['profiles'] != null) {
-      custName = (json['profiles'] as Map<String, dynamic>)['full_name'] as String?;
+      final prof = json['profiles'] as Map<String, dynamic>;
+      custName = prof['full_name'] as String?;
+      phone = prof['phone'] as String?;
+    }
+
+    String? oPhone;
+    if (json['owner_profile'] != null) {
+      oPhone = json['owner_profile']['phone'] as String?;
     }
 
     return BookingModel(
@@ -53,23 +122,35 @@ class BookingModel {
       eventDate: DateTime.parse(json['event_date'] as String),
       guestCount: json['guest_count'] as int? ?? 0,
       notes: json['notes'] as String?,
-      status: json['status'] as String? ?? 'pending',
+      ownerNote: json['owner_note'] as String?,
+      status: _parseStatus(json['status'] as String?),
       tokenPaid: json['token_paid'] as bool? ?? false,
       tokenAmount: (json['token_amount'] as num?)?.toDouble() ?? 0.0,
       totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       farm: farmModel,
       customerName: custName,
+      customerPhone: phone,
+      ownerPhone: oPhone,
+    );
+  }
+
+  static BookingStatus _parseStatus(String? status) {
+    if (status == null) return BookingStatus.pending;
+    return BookingStatus.values.firstWhere(
+      (e) => e.name == status,
+      orElse: () => BookingStatus.pending,
     );
   }
 
   Map<String, dynamic> toInsertJson() => {
+        'id': id,
         'farm_id': farmId,
         'customer_id': customerId,
         'event_date': eventDate.toIso8601String().split('T').first,
         'guest_count': guestCount,
         'notes': notes,
-        'status': 'pending',
+        'status': BookingStatus.pending.name,
         'token_paid': false,
         'token_amount': tokenAmount,
         'total_amount': totalAmount,

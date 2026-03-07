@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../../services/upi_payment_service.dart';
 import '../../../../controllers/auth_controller.dart';
 import '../../../../utils/constants/app_colors.dart';
+import '../../../../utils/helpers/image_utils.dart';
 import '../../../widgets/custom_buttons.dart';
 
 class OwnerUpiSetupScreen extends StatefulWidget {
@@ -50,12 +50,10 @@ class _OwnerUpiSetupScreenState extends State<OwnerUpiSetupScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
+    final path = await ImageUtils.pickImage(context);
+    if (path != null) {
       setState(() {
-        _qrCodeImage = File(pickedFile.path);
+        _qrCodeImage = File(path);
       });
     }
   }

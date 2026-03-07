@@ -81,24 +81,12 @@ class _BookingCard extends StatelessWidget {
   const _BookingCard({required this.booking});
   final BookingModel booking;
 
-  Color _statusColor(String status) {
-    return switch (status) {
-      'token_paid' => AppColors.tokenPaid,
-      'released' => AppColors.released,
-      'confirmed' => AppColors.primary,
-      'approved' => AppColors.approved,
-      _ => AppColors.pending,
-    };
+  Color _statusColor(BookingStatus status) {
+    return status.color;
   }
 
-  String _statusLabel(String status) {
-    return switch (status) {
-      'token_paid' => 'Token Paid',
-      'released' => 'Released',
-      'confirmed' => 'Confirmed',
-      'approved' => 'Approved',
-      _ => 'Pending',
-    };
+  String _statusLabel(BookingStatus status) {
+    return status.label;
   }
 
   @override
@@ -205,8 +193,8 @@ class _BookingCard extends StatelessWidget {
                     ),
                   ),
 
-                  // If approved, show Pay Token button
-                  if (booking.status == 'approved') ...[
+                  // Payment actions
+                  if (booking.status == BookingStatus.booked || booking.status == BookingStatus.pending || booking.status == BookingStatus.paid) ...[
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
@@ -218,7 +206,7 @@ class _BookingCard extends StatelessWidget {
                         ),
                         onPressed: () => _showPaymentSheet(context, booking),
                         child: Text(
-                          'Pay Token',
+                          booking.status == BookingStatus.paid ? 'Pay Balance' : 'Pay Token',
                           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),
@@ -234,6 +222,10 @@ class _BookingCard extends StatelessWidget {
   }
 
   void _showPaymentSheet(BuildContext context, BookingModel booking) {
+    final bool isRemaining = booking.status == BookingStatus.paid;
+    final double amount = isRemaining ? (booking.totalAmount - booking.tokenAmount) : booking.tokenAmount;
+    final String paymentType = isRemaining ? 'remaining' : 'token';
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -243,19 +235,13 @@ class _BookingCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select Payment Method', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.credit_card, color: AppColors.primary),
-              title: Text('Credit/Debit Card (Stripe)', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-              onTap: () {
-                Navigator.pop(ctx);
-                // Call Stripe checkout via EdgeFunctionService (Assume user has edge fn)
-                // For this example, we assume Stripe flow is handled elsewhere or you can invoke it from controller.
-                Get.snackbar('Coming Soon', 'Stripe checkout from here is pending implementation.');
-              },
+            Text('Payment Method', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              '${isRemaining ? "Remaining" : "Token"} Amount: ₹${amount.toStringAsFixed(2)}',
+              style: GoogleFonts.poppins(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w600),
             ),
-            const Divider(),
+            const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
               title: Text('UPI Manual Transfer', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
@@ -265,9 +251,18 @@ class _BookingCard extends StatelessWidget {
                       bookingId: booking.id,
                       ownerId: booking.farm!.ownerId,
                       farmId: booking.farmId,
-                      paymentType: 'token',
-                      amount: booking.tokenAmount,
+                      paymentType: paymentType,
+                      amount: amount,
                     ));
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.credit_card, color: AppColors.primary),
+              title: Text('Credit/Debit Card', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Get.snackbar('Coming Soon', 'Stripe integration is pending implementation.');
               },
             ),
           ],

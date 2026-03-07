@@ -19,7 +19,7 @@ class BookingConfirmScreen extends StatelessWidget {
     final int guestCount = args['guestCount'] as int;
     final controller = Get.find<BookingController>();
 
-    return Scaffold(
+    return Scaffold( 
       appBar: AppBar(title: const Text('Request Booking')),
       body: SafeArea(
         child: Padding(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../screens/upi_payment_screen.dart';
 import '../../services/upi_payment_service.dart';
 import '../data/models/booking_model.dart';
 import '../data/models/farm_model.dart';
@@ -45,24 +48,39 @@ class BookingController extends GetxController {
 
     isProcessing.value = true;
     try {
+      // 1. Check if owner has UPI set up
+      final details = await _upiService.getOwnerUpiDetails(farm.ownerId);
+      if (details['upi_id'] == null) {
+        _showError('Owner hasn\'t set up a payment method (UPI) yet. Please contact them.');
+        return;
+      }
+
       final booking = BookingModel(
-        id: '',
+        id: const Uuid().v4(),
         farmId: farm.id,
         customerId: userId,
         eventDate: selectedDate.value!,
         guestCount: guestCount.value,
-        status: 'pending',
+        status: BookingStatus.pending,
         tokenPaid: false,
         tokenAmount: farm.tokenAmount,
         totalAmount: farm.pricePerDay,
       );
 
-      await _bookingService.createBooking(booking);
+      final createdBooking = await _bookingService.createBooking(booking);
 
       await loadBookings();
-      Get.back();
-      Get.back();
-      _showSuccess('Booking requested! Waiting for owner approval.');
+
+      // Navigate to UPI Payment Screen
+      Get.off(() => UpiPaymentScreen(
+            bookingId: createdBooking.id,
+            ownerId: farm.ownerId,
+            farmId: farm.id,
+            paymentType: 'token',
+            amount: farm.tokenAmount,
+          ));
+
+      _showNotification('Booking requested! Pay the token and upload the screenshot to confirm.');
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -88,13 +106,33 @@ class BookingController extends GetxController {
     );
   }
 
-  void _showSuccess(String message) {
+  void _showNotification(String message) {
     Get.snackbar(
-      'Success',
+      'Notification',
       message,
-      backgroundColor: const Color(0xFF008450),
+      backgroundColor: const Color(0xFF8B5E3C),
       colorText: Colors.white,
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  Future<void> makeCall(String? phoneNumber) async {
+    if (phoneNumber == null || phoneNumber.isEmpty) {
+      _showError('Phone number not available');
+      return;
+    }
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        _showError('Could not launch dialer');
+      }
+    } catch (e) {
+      _showError('Error: $e');
+    }
   }
 }

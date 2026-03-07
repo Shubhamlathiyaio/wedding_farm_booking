@@ -8,6 +8,7 @@ import '../../../../controllers/owner_dashboard_controller.dart';
 import '../../../../data/models/booking_model.dart';
 import '../../../../utils/constants/app_colors.dart';
 import '../../../widgets/custom_buttons.dart';
+import 'widgets/booking_details_sheet.dart';
 
 class OwnerDashboardScreen extends StatelessWidget {
   const OwnerDashboardScreen({super.key});
@@ -20,7 +21,7 @@ class OwnerDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Owner Dashboard'),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -30,9 +31,6 @@ class OwnerDashboardScreen extends StatelessWidget {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-        }
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: controller.loadDashboard,
@@ -40,96 +38,172 @@ class OwnerDashboardScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: [
               // Greeting
-              Text(
-                'Welcome back, ${authCtrl.profile.value?.fullName.split(' ').first ?? 'Owner'}! 👋',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome back, 👋',
+                          style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
+                        ),
+                        Text(
+                          authCtrl.profile.value?.fullName.split(' ').first ?? 'Owner',
+                          style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    child: const Icon(Icons.person, color: AppColors.primary),
+                  ),
+                ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
 
               // Stats row
               Row(
                 children: [
                   Expanded(
-                    child: _StatCard(
-                      icon: Icons.celebration_outlined,
-                      label: 'Upcoming\nWeddings',
-                      value: controller.upcomingCount.value.toString(),
-                      color: AppColors.primary,
-                    ),
+                    child: Obx(() => _StatCard(
+                          label: 'Booked',
+                          value: controller.upcomingCount.value.toString(),
+                          icon: Icons.calendar_month,
+                          color: Colors.teal,
+                          isSelected: controller.selectedTab.value == OwnerDashboardTab.booked,
+                          onTap: () => controller.onTabChanged(OwnerDashboardTab.booked),
+                        )),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _StatCard(
-                      icon: Icons.event_available_outlined,
-                      label: 'Active\nBookings',
-                      value: controller.activeCount.value.toString(),
-                      color: const Color(0xFF1565C0),
-                    ),
+                    child: Obx(() => _StatCard(
+                          label: 'Paid',
+                          value: controller.activeCount.value.toString(),
+                          icon: Icons.check_circle,
+                          color: AppColors.primary,
+                          isSelected: controller.selectedTab.value == OwnerDashboardTab.paid,
+                          onTap: () => controller.onTabChanged(OwnerDashboardTab.paid),
+                        )),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-
-              // Date strip
-              _buildDateStrip(controller),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _FilterTab(
+                      label: 'Pending',
+                      isSelected: controller.selectedTab.value == OwnerDashboardTab.pending,
+                      onTap: () => controller.onTabChanged(OwnerDashboardTab.pending),
+                    ),
+                    _FilterTab(
+                      label: 'Booked',
+                      isSelected: controller.selectedTab.value == OwnerDashboardTab.booked,
+                      onTap: () => controller.onTabChanged(OwnerDashboardTab.booked),
+                    ),
+                    _FilterTab(
+                      label: 'Paid',
+                      isSelected: controller.selectedTab.value == OwnerDashboardTab.paid,
+                      onTap: () => controller.onTabChanged(OwnerDashboardTab.paid),
+                    ),
+                    _FilterTab(
+                      label: 'All',
+                      isSelected: controller.selectedTab.value == OwnerDashboardTab.all,
+                      onTap: () => controller.onTabChanged(OwnerDashboardTab.all),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
 
-              // Pending requests
+              // Date strip
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Pending Requests',
+                    'Filter by Date',
+                    style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  ),
+                  if (controller.selectedDate.value != null)
+                    TextButton(
+                      onPressed: () => controller.onDateSelected(null),
+                      child: Text('Clear', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary)),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildDateStrip(controller),
+              const SizedBox(height: 32),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${controller.selectedTab.value.name.capitalizeFirst} Weddings',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Obx(() => Text(
-                          '${controller.pendingBookings.length}',
-                          style: GoogleFonts.poppins(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        )),
+                    child: Text(
+                      '${controller.bookings.length} Total',
+                      style: GoogleFonts.poppins(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              Obx(() {
-                if (controller.pendingBookings.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text(
-                        'No pending requests 🎉',
-                        style: GoogleFonts.poppins(color: AppColors.textSecondary),
-                      ),
+              if (controller.isLoading.value)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                )
+              else if (controller.bookings.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.event_busy_outlined, size: 48, color: AppColors.grey.withAlpha(50)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No bookings found for this filter.',
+                          style: GoogleFonts.poppins(color: AppColors.textSecondary),
+                        ),
+                      ],
                     ),
-                  );
-                }
-                return Column(
-                  children: controller.pendingBookings
-                      .map((b) => _PendingRequestCard(
+                  ),
+                )
+              else
+                Column(
+                  children: controller.bookings
+                      .map((b) => _BookingCard(
                             booking: b,
                             controller: controller,
                           ))
                       .toList(),
-                );
-              }),
+                ),
             ],
           ),
         );
@@ -139,7 +213,7 @@ class OwnerDashboardScreen extends StatelessWidget {
 
   Widget _buildDateStrip(OwnerDashboardController controller) {
     final today = DateTime.now();
-    final days = List.generate(7, (i) => today.add(Duration(days: i)));
+    final days = List.generate(14, (i) => today.add(Duration(days: i)));
 
     return SizedBox(
       height: 72,
@@ -149,48 +223,56 @@ class OwnerDashboardScreen extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final day = days[i];
-          final isToday = i == 0;
-          final hasBooking = controller.pendingBookings.any(
-            (b) => b.eventDate.year == day.year && b.eventDate.month == day.month && b.eventDate.day == day.day,
-          );
+          final isSelected = controller.selectedDate.value != null &&
+              controller.selectedDate.value!.year == day.year &&
+              controller.selectedDate.value!.month == day.month &&
+              controller.selectedDate.value!.day == day.day;
 
-          return Container(
-            width: 50,
-            decoration: BoxDecoration(
-              color: isToday ? AppColors.primary : AppColors.greyLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isToday ? AppColors.primary : AppColors.divider,
+          final isToday = day.year == today.year && day.month == today.month && day.day == today.day;
+
+          return InkWell(
+            onTap: () => controller.onDateSelected(day),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 50,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : AppColors.divider,
+                  width: isToday ? 2 : 1,
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  DateFormat('EEE').format(day).substring(0, 3),
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    color: isToday ? Colors.white : AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  day.day.toString(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isToday ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-                if (hasBooking)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: isToday ? Colors.white : AppColors.primary,
-                      shape: BoxShape.circle,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('EEE').format(day).substring(0, 3),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? Colors.white : AppColors.textSecondary,
                     ),
                   ),
-              ],
+                  Text(
+                    day.day.toString(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  if (isToday)
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -205,50 +287,60 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    this.onTap,
+    this.isSelected = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final Color color;
+  final VoidCallback? onTap;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: color,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? color : color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(isSelected ? 0.5 : 0.2)),
+          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10)] : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : color, size: 28),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: isSelected ? Colors.white : color,
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: AppColors.textSecondary,
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? Colors.white.withOpacity(0.9) : AppColors.textSecondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _PendingRequestCard extends StatelessWidget {
-  const _PendingRequestCard({required this.booking, required this.controller});
+class _BookingCard extends StatelessWidget {
+  const _BookingCard({required this.booking, required this.controller});
   final BookingModel booking;
   final OwnerDashboardController controller;
 
@@ -264,106 +356,99 @@ class _PendingRequestCard extends StatelessWidget {
           BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  booking.customerName ?? 'Unknown Customer',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.pending.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Pending',
-                  style: GoogleFonts.poppins(
-                    color: AppColors.pending,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.home_outlined, size: 14, color: AppColors.grey),
-              const SizedBox(width: 4),
-              Text(
-                booking.farm?.name ?? 'Unknown Farm',
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey),
-              const SizedBox(width: 4),
-              Text(
-                DateFormat('dd MMM yyyy').format(booking.eventDate),
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 16),
-              const Icon(Icons.people_outline, size: 14, color: AppColors.grey),
-              const SizedBox(width: 4),
-              Text(
-                '${booking.guestCount} guests',
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          AppButton(
-            title: 'View Details',
-            type: AppButtonType.outline,
-            onPressed: () => _showDetailsSheet(context),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              if (booking.status == 'pending') ...[
+      child: InkWell(
+        onTap: () => _showDetailsSheet(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 Expanded(
-                  child: AppButton(
-                    title: 'Approve',
-                    isLoading: controller.isLoading.value,
-                    onPressed: () => controller.approveBooking(booking.id),
+                  child: Text(
+                    booking.customerName ?? 'Unknown Customer',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AppButton(
-                    title: 'Reject',
-                    type: AppButtonType.danger,
-                    isLoading: controller.isLoading.value,
-                    onPressed: () => _showRejectDialog(context),
-                  ),
-                ),
-              ] else ...[
-                Expanded(
-                  child: AppButton(
-                    title: 'Release Farm',
-                    type: AppButtonType.danger,
-                    isLoading: controller.isReleasing.value,
-                    onPressed: () => _showReleaseDialog(context),
-                  ),
+                _buildStatusTag(booking.status),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.home_outlined, size: 14, color: AppColors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  booking.farm?.name ?? 'Unknown Farm',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
                 ),
               ],
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  DateFormat('dd MMM yyyy').format(booking.eventDate),
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                ),
+                const SizedBox(width: 16),
+                const Icon(Icons.people_outline, size: 14, color: AppColors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  '${booking.guestCount} guests',
+                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    title: 'View Details',
+                    type: AppButtonType.outline,
+                    onPressed: () => _showDetailsSheet(context),
+                  ),
+                ),
+                if (booking.customerPhone != null) ...[
+                  const SizedBox(width: 10),
+                  IconButton(
+                    onPressed: () => controller.makeCall(booking.customerPhone),
+                    icon: const Icon(Icons.call, color: Colors.white),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size(48, 48),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusTag(BookingStatus status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: status.color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        status.label,
+        style: GoogleFonts.poppins(
+          color: status.color,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -371,100 +456,53 @@ class _PendingRequestCard extends StatelessWidget {
   void _showDetailsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Booking Details', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            _detailRow('Customer', booking.customerName ?? '—'),
-            _detailRow('Farm', booking.farm?.name ?? '—'),
-            _detailRow('Event Date', DateFormat('dd MMM yyyy').format(booking.eventDate)),
-            _detailRow('Guest Count', '${booking.guestCount} guests'),
-            _detailRow('Token Amount', '₹${booking.tokenAmount.toStringAsFixed(0)}'),
-            _detailRow('Total Amount', '₹${booking.totalAmount.toStringAsFixed(0)}'),
-            if (booking.notes != null && booking.notes!.isNotEmpty) _detailRow('Notes', booking.notes!),
-            const SizedBox(height: 16),
-          ],
-        ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BookingDetailsSheet(
+        booking: booking,
+        controller: controller,
       ),
     );
   }
+}
 
-  Widget _detailRow(String label, String value) {
+class _FilterTab extends StatelessWidget {
+  const _FilterTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(label, style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13)),
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.divider,
+            ),
+            boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
           ),
-          Expanded(
-            child: Text(value, style: GoogleFonts.poppins(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showReleaseDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Release Farm?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        content: Text(
-          'This will release the farm and cancel the booking. This action cannot be undone.',
-          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () {
-              Navigator.pop(ctx);
-              controller.releaseFarm(booking.id);
-            },
-            child: const Text('Release'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRejectDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Reject Booking?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        content: Text(
-          'This will reject the booking and cancel the request. This action cannot be undone.',
-          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () {
-              Navigator.pop(ctx);
-              controller.rejectBooking(booking.id);
-            },
-            child: const Text('Reject'),
-          ),
-        ],
       ),
     );
   }

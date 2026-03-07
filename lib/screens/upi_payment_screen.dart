@@ -43,38 +43,49 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
   Future<void> _fetchOwnerDetails() async {
     try {
       final details = await _upiService.getOwnerUpiDetails(widget.ownerId);
-      setState(() {
-        _upiId = details['upi_id'];
-        _upiName = details['upi_name'];
-        _upiQrUrl = details['upi_qr_url'];
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _upiId = details['upi_id'];
+          _upiName = details['upi_name'];
+          _upiQrUrl = details['upi_qr_url'];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch owner details');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   String get _upiUrl {
-    // upi://pay?pa={upi_id}&pn={upi_name}&am={amount}&cu=INR&tn=Farm+Booking+Token
-    final encodedName = Uri.encodeComponent(_upiName ?? 'Urban Harvest');
+    final upiId = _upiId ?? '';
+    final upiName = _upiName ?? 'Urban Harvest';
+    final encodedName = Uri.encodeComponent(upiName);
     final note = Uri.encodeComponent('Farm Booking ${widget.paymentType.capitalizeFirst}');
-    return 'upi://pay?pa=$_upiId&pn=$encodedName&am=${widget.amount}&cu=INR&tn=$note';
+    return 'upi://pay?pa=$upiId&pn=$encodedName&am=${widget.amount}&cu=INR&tn=$note';
   }
 
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF8B5E3C);
+    final currentUpiId = _upiId;
+    final currentQrUrl = _upiQrUrl;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('UPI Payment'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: const Text('UPI Payment', style: TextStyle(color: Colors.white)),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _upiId == null
+          : (currentUpiId == null || currentUpiId.isEmpty)
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -88,11 +99,27 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Owner ID: ${widget.ownerId}",
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
                         const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => Get.back(),
-                          style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-                          child: const Text('Go Back', style: TextStyle(color: Colors.white)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => Get.back(),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                              child: const Text('Go Back', style: TextStyle(color: Colors.white)),
+                            ),
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: _fetchOwnerDetails,
+                              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -103,15 +130,15 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Scan to Pay',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
+                      Text(
+                        'Scan to Pay ${widget.paymentType == 'token' ? 'Token' : 'Balance'}',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF8B5E3C)),
                       ),
                       const SizedBox(height: 24),
                       Center(
-                        child: _upiQrUrl != null
+                        child: currentQrUrl != null && currentQrUrl.isNotEmpty
                             ? FutureBuilder<String>(
-                                future: _upiService.getScreenshotSignedUrl(_upiQrUrl!),
+                                future: _upiService.getScreenshotSignedUrl(currentQrUrl),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState == ConnectionState.waiting) {
                                     return const SizedBox(
@@ -119,7 +146,7 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                                       child: Center(child: CircularProgressIndicator()),
                                     );
                                   }
-                                  if (snapshot.hasData) {
+                                  if (snapshot.hasData && snapshot.data != null) {
                                     return ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: Image.network(
@@ -127,6 +154,14 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                                         height: 240,
                                         width: 240,
                                         fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return QrImageView(
+                                            data: _upiUrl,
+                                            version: QrVersions.auto,
+                                            size: 240.0,
+                                            backgroundColor: Colors.white,
+                                          );
+                                        },
                                       ),
                                     );
                                   }
@@ -151,13 +186,13 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _upiId!,
+                            currentUpiId,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           IconButton(
                             icon: const Icon(Icons.copy, size: 20, color: primaryColor),
                             onPressed: () {
-                              Clipboard.setData(ClipboardData(text: _upiId!));
+                              Clipboard.setData(ClipboardData(text: currentUpiId));
                               Get.snackbar('Copied', 'UPI ID copied to clipboard', snackPosition: SnackPosition.BOTTOM);
                             },
                           ),
@@ -175,7 +210,7 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                         decoration: BoxDecoration(
                           color: Colors.brown.shade50,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: primaryColor.withAlpha(76)), // ~0.3 opacity
+                          border: Border.all(color: primaryColor.withAlpha(76)),
                         ),
                         child: const Row(
                           children: [
@@ -195,14 +230,21 @@ class _UpiPaymentScreenState extends State<UpiPaymentScreen> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: () => Get.to(() => ScreenshotUploadScreen(
-                                bookingId: widget.bookingId,
-                                customerId: _supabase.auth.currentUser!.id,
-                                ownerId: widget.ownerId,
-                                farmId: widget.farmId,
-                                paymentType: widget.paymentType,
-                                amount: widget.amount,
-                              )),
+                          onPressed: () {
+                            final user = _supabase.auth.currentUser;
+                            if (user == null) {
+                              Get.snackbar('Error', 'Please log in again');
+                              return;
+                            }
+                            Get.to(() => ScreenshotUploadScreen(
+                                  bookingId: widget.bookingId,
+                                  customerId: user.id,
+                                  ownerId: widget.ownerId,
+                                  farmId: widget.farmId,
+                                  paymentType: widget.paymentType,
+                                  amount: widget.amount,
+                                ));
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

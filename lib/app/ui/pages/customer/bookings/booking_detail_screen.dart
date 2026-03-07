@@ -72,11 +72,25 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (farm?.firstPhotoUrl != null)
-            CachedNetworkImage(
-              imageUrl: farm!.firstPhotoUrl,
-              height: 220,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            Stack(
+              children: [
+                CachedNetworkImage(
+                  imageUrl: farm!.firstPhotoUrl,
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+                if (booking.ownerPhone != null)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: FloatingActionButton.small(
+                      onPressed: () => controller.makeCall(booking.ownerPhone),
+                      backgroundColor: Colors.white,
+                      child: const Icon(Icons.call, color: AppColors.primary),
+                    ),
+                  ),
+              ],
             ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -111,16 +125,31 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   }
 
   Widget _buildEventDetails(BookingModel booking) {
-    return _buildSection(
-      title: 'Event Information',
-      icon: Icons.event,
-      child: Column(
-        children: [
-          _infoTile(Icons.calendar_month, 'Event Date', DateFormat('EEEE, dd MMM yyyy').format(booking.eventDate)),
-          _infoTile(Icons.people, 'Guest Count', '${booking.guestCount} People'),
-          if (booking.notes != null && booking.notes!.isNotEmpty) _infoTile(Icons.notes, 'Notes', booking.notes!),
+    return Column(
+      children: [
+        _buildSection(
+          title: 'Event Information',
+          icon: Icons.event,
+          child: Column(
+            children: [
+              _infoTile(Icons.calendar_month, 'Event Date', DateFormat('EEEE, dd MMM yyyy').format(booking.eventDate)),
+              _infoTile(Icons.people, 'Guest Count', '${booking.guestCount} People'),
+              if (booking.notes != null && booking.notes!.isNotEmpty) _infoTile(Icons.notes, 'My Notes', booking.notes!),
+            ],
+          ),
+        ),
+        if (booking.ownerNote != null && booking.ownerNote!.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildSection(
+            title: 'Note from Owner',
+            icon: Icons.chat_bubble_outline,
+            child: Text(
+              booking.ownerNote!,
+              style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textPrimary, fontStyle: FontStyle.italic),
+            ),
+          ),
         ],
-      ),
+      ],
     );
   }
 
@@ -135,18 +164,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider()),
           Obx(() {
             final hasPending = controller.paymentHistory.any((p) => p['status'] == 'pending');
-            String displayStatus = booking.status;
-            Color statusColor = _getStatusColor(booking.status);
+            String displayLabel = booking.status.label;
+            Color statusColor = booking.status.color;
 
             if (hasPending) {
-              displayStatus = 'verification_pending';
+              displayLabel = 'Verifying Payment...';
               statusColor = Colors.orange;
             }
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Overall Status', style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 14)),
+                Text('Booking Status', style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 14)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -154,7 +183,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    displayStatus.replaceAll('_', ' ').toUpperCase(),
+                    displayLabel.toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -352,7 +381,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         );
       }
 
-      if (booking.status == 'approved') {
+      if (booking.status == BookingStatus.booked || (booking.status == BookingStatus.paid && !hasPending)) {
+        final bool isRemaining = booking.status == BookingStatus.paid;
         return Container(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: ElevatedButton(
@@ -363,14 +393,14 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: Text(
-              'Pay Token Now',
+              isRemaining ? 'Pay Remaining Balance' : 'Pay Token Now',
               style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
         );
       }
 
-      if (booking.status == 'pending') {
+      if (booking.status == BookingStatus.pending) {
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -447,17 +477,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    return switch (status) {
-      'token_paid' => Colors.green,
-      'released' => Colors.blue,
-      'confirmed' => Colors.indigo,
-      'approved' => Colors.teal,
-      _ => Colors.orange,
-    };
-  }
-
   void _showPaymentOptions(BuildContext context, BookingModel booking) {
+    final bool isRemaining = booking.status == BookingStatus.paid;
+    final double amount = isRemaining ? (booking.totalAmount - booking.tokenAmount) : booking.tokenAmount;
+    final String paymentType = isRemaining ? 'remaining' : 'token';
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
@@ -468,8 +492,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Payment Options', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            const Text('Secure your booking by paying the token.', style: TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 4),
+            Text(
+              '${isRemaining ? "Remaining Balance" : "Token Amount"}: ₹${amount.toStringAsFixed(2)}',
+              style: GoogleFonts.poppins(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 24),
             ListTile(
               contentPadding: const EdgeInsets.all(12),
@@ -489,8 +516,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       bookingId: booking.id,
                       ownerId: booking.farm!.ownerId,
                       farmId: booking.farmId,
-                      paymentType: 'token',
-                      amount: booking.tokenAmount,
+                      paymentType: paymentType,
+                      amount: amount,
                     ))?.then((_) => controller.loadPaymentHistory(booking.id));
               },
             ),

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:image/image.dart' as img;
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UPIPaymentService {
@@ -8,9 +8,9 @@ class UPIPaymentService {
 
   /// Fetch owner's UPI details from the profiles table.
   Future<Map<String, dynamic>> getOwnerUpiDetails(String ownerId) async {
-    final response = await _supabase.from('profiles').select('upi_id, upi_name, upi_qr_url').eq('id', ownerId).single();
+    final response = await _supabase.from('profiles').select('upi_id, upi_name, upi_qr_url').eq('id', ownerId).maybeSingle();
 
-    return response;
+    return response ?? {};
   }
 
   /// Update owner's UPI details and QR code.
@@ -23,18 +23,11 @@ class UPIPaymentService {
     String? qrUrl;
 
     if (qrCodeFile != null) {
-      // 1. Compress image to JPEG with 70% quality
-      final bytes = await qrCodeFile.readAsBytes();
-      final image = img.decodeImage(bytes);
-      if (image == null) throw Exception("Failed to decode image");
-
-      final compressedBytes = img.encodeJpg(image, quality: 70);
-
-      // 2. Upload to Supabase Storage
+      // 1. Upload to Supabase Storage Directly
       final storagePath = 'qr_codes/$ownerId.jpg';
-      await _supabase.storage.from('payment-screenshots').uploadBinary(
+      await _supabase.storage.from('payment-screenshots').upload(
             storagePath,
-            compressedBytes,
+            qrCodeFile,
             fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
           );
       qrUrl = storagePath;
@@ -63,44 +56,63 @@ class UPIPaymentService {
     String? upiRefNumber,
     required File screenshotFile,
   }) async {
-    // 1. Compress image to JPEG with 70% quality
-    final bytes = await screenshotFile.readAsBytes();
-    final image = img.decodeImage(bytes);
-    if (image == null) throw Exception("Failed to decode image");
+    // 🛡️ Guard against null auth session
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      debugPrint('Submit UPI Failure: auth.currentUser is null');
+      throw Exception("User session expired. Please log in again.");
+    }
 
-    final compressedBytes = img.encodeJpg(image, quality: 70);
+    // 🎯 Explicitly use auth.uid() as suggested by DB agent
+    final authUserId = user.id;
+    debugPrint('Submitting UPI Payment: authUser=$authUserId, targetCustomer=$customerId');
 
-    // 2. Upload to Supabase Storage
-    final storagePath = '$customerId/${bookingId}_$paymentType.jpg';
-    await _supabase.storage.from('payment-screenshots').uploadBinary(
-          storagePath,
-          compressedBytes,
-          fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
-        );
+    try {
+      // 1. Upload to Supabase Storage Directly
+      final storagePath = '$authUserId/${bookingId}_$paymentType.jpg';
+      debugPrint('Uploading screenshot to: $storagePath');
 
-    // Get public URL or signed URL for the screenshot (here we just store the path)
-    final screenshotUrl = storagePath;
+      await _supabase.storage.from('payment-screenshots').upload(
+            storagePath,
+            screenshotFile,
+            fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+          );
 
-    // 3. Insert into upi_payment_requests table
-    await _supabase.from('upi_payment_requests').insert({
-      'booking_id': bookingId,
-      'customer_id': customerId,
-      'owner_id': ownerId,
-      'farm_id': farmId,
-      'payment_type': paymentType,
-      'amount': amount,
-      'upi_ref_number': upiRefNumber,
-      'screenshot_url': screenshotUrl,
-      'status': 'pending',
-    });
+      final screenshotUrl = storagePath;
+      debugPrint('Upload success: $screenshotUrl');
 
-    // 4. Insert notification for owner
-    await _supabase.from('notifications').insert({
-      'user_id': ownerId,
-      'booking_id': bookingId,
-      'type': 'upi_payment_pending', // Custom type for owner to know
-      'read': false,
-    });
+      // 2. Insert into upi_payment_requests table
+      // IMPORTANT: customer_id MUST be auth.uid() for RLS
+      // We use _supabase.auth.currentUser!.id INLINE to be 100% sure we satisfy RLS check
+      final insertData = {
+        'booking_id': bookingId,
+        'customer_id': _supabase.auth.currentUser!.id, // 🛡️ Directly from SDK for RLS
+        'owner_id': ownerId,
+        'farm_id': farmId,
+        'payment_type': paymentType,
+        'amount': amount,
+        'upi_ref_number': upiRefNumber,
+        'screenshot_url': screenshotUrl,
+        'status': 'pending',
+      };
+
+      debugPrint('DB Insert data: $insertData');
+
+      await _supabase.from('upi_payment_requests').insert(insertData);
+      debugPrint('DB Insert success');
+
+      // 3. Insert notification for owner
+      await _supabase.from('notifications').insert({
+        'user_id': ownerId,
+        'booking_id': bookingId,
+        'type': 'upi_payment_pending',
+        'read': false,
+      });
+      debugPrint('Notification success');
+    } catch (e) {
+      debugPrint('UPI Payment Error Chain: $e');
+      rethrow;
+    }
   }
 
   /// Fetch all pending UPI payment requests for an owner.
@@ -113,7 +125,12 @@ class UPIPaymentService {
 
   /// Get a signed URL for a screenshot (expires in 1 hour).
   Future<String> getScreenshotSignedUrl(String path) async {
-    return await _supabase.storage.from('payment-screenshots').createSignedUrl(path, 3600);
+    try {
+      return await _supabase.storage.from('payment-screenshots').createSignedUrl(path, 3600);
+    } catch (e) {
+      debugPrint('Error getting signed URL: $e');
+      return '';
+    }
   }
 
   /// Confirm a UPI payment request using Edge Function.
