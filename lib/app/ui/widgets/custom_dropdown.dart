@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../utils/constants/app_colors.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 class CustomDropdown extends StatefulWidget {
   const CustomDropdown({
@@ -54,7 +53,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
                 ),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down, color: AppColors.grey),
+            Icon(Icons.keyboard_arrow_down, color: AppColors.grey),
           ],
         ),
       ),
@@ -75,7 +74,7 @@ class _CustomDropdownState extends State<CustomDropdown> {
           final isSelected = selectedValue == item;
           return ListTile(
             title: Text(item),
-            trailing: isSelected ? const Icon(Icons.check_circle, color: AppColors.primary) : null,
+            trailing: isSelected ? Icon(Icons.check_circle, color: AppColors.primary) : null,
             onTap: () {
               setState(() => selectedValue = item);
               widget.onSelect(item);

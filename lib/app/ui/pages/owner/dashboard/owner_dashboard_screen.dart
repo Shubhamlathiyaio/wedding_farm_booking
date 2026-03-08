@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 import '../../../../controllers/auth_controller.dart';
 import '../../../../controllers/owner_dashboard_controller.dart';
 import '../../../../data/models/booking_model.dart';
 import '../../../../utils/constants/app_colors.dart';
+import '../../../../utils/constants/app_strings.dart';
+import '../../../../utils/themes/app_styles.dart';
 import '../../../widgets/custom_buttons.dart';
 import 'widgets/booking_details_sheet.dart';
 
@@ -21,7 +24,7 @@ class OwnerDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Owner Dashboard'),
+        title: Text(T.ownerDashboard),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -46,54 +49,59 @@ class OwnerDashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Welcome back, 👋',
-                          style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
+                          T.welcomeBack,
+                          style: AppStyles.of(context).s14w400Secondary,
                         ),
                         Text(
                           authCtrl.profile.value?.fullName.split(' ').first ?? 'Owner',
-                          style: GoogleFonts.poppins(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: AppStyles.of(context).h1,
                         ),
                       ],
                     ),
                   ),
                   CircleAvatar(
                     radius: 20,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
-                    child: const Icon(Icons.person, color: AppColors.primary),
+                    backgroundColor: AppColors.primary.changeOpacity(0.1),
+                    child: Icon(Icons.person, color: AppColors.primary),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
 
               // Stats row
-              Row(
-                children: [
-                  Expanded(
-                    child: Obx(() => _StatCard(
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                child: Obx(() => Row(
+                      children: [
+                        _StatCard(
+                          label: 'Pending',
+                          value: controller.pendingCount.value.toString(),
+                          icon: Icons.hourglass_empty,
+                          color: AppColors.pending,
+                          isSelected: controller.selectedTab.value == BookingStatus.pending,
+                          onTap: () => controller.onTabChanged(BookingStatus.pending),
+                        ),
+                        const SizedBox(width: 12),
+                        _StatCard(
                           label: 'Booked',
-                          value: controller.upcomingCount.value.toString(),
+                          value: controller.bookedCount.value.toString(),
                           icon: Icons.calendar_month,
                           color: Colors.teal,
-                          isSelected: controller.selectedTab.value == OwnerDashboardTab.booked,
-                          onTap: () => controller.onTabChanged(OwnerDashboardTab.booked),
-                        )),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Obx(() => _StatCard(
-                          label: 'Paid',
-                          value: controller.activeCount.value.toString(),
+                          isSelected: controller.selectedTab.value == BookingStatus.booked,
+                          onTap: () => controller.onTabChanged(BookingStatus.booked),
+                        ),
+                        const SizedBox(width: 12),
+                        _StatCard(
+                          label: T.paid,
+                          value: controller.paidCount.value.toString(),
                           icon: Icons.check_circle,
                           color: AppColors.primary,
-                          isSelected: controller.selectedTab.value == OwnerDashboardTab.paid,
-                          onTap: () => controller.onTabChanged(OwnerDashboardTab.paid),
-                        )),
-                  ),
-                ],
+                          isSelected: controller.selectedTab.value == BookingStatus.paid,
+                          onTap: () => controller.onTabChanged(BookingStatus.paid),
+                        ),
+                      ],
+                    )),
               ),
               const SizedBox(height: 24),
               SingleChildScrollView(
@@ -102,23 +110,23 @@ class OwnerDashboardScreen extends StatelessWidget {
                   children: [
                     _FilterTab(
                       label: 'Pending',
-                      isSelected: controller.selectedTab.value == OwnerDashboardTab.pending,
-                      onTap: () => controller.onTabChanged(OwnerDashboardTab.pending),
+                      isSelected: controller.selectedTab.value == BookingStatus.pending,
+                      onTap: () => controller.onTabChanged(BookingStatus.pending),
                     ),
                     _FilterTab(
                       label: 'Booked',
-                      isSelected: controller.selectedTab.value == OwnerDashboardTab.booked,
-                      onTap: () => controller.onTabChanged(OwnerDashboardTab.booked),
+                      isSelected: controller.selectedTab.value == BookingStatus.booked,
+                      onTap: () => controller.onTabChanged(BookingStatus.booked),
                     ),
                     _FilterTab(
                       label: 'Paid',
-                      isSelected: controller.selectedTab.value == OwnerDashboardTab.paid,
-                      onTap: () => controller.onTabChanged(OwnerDashboardTab.paid),
+                      isSelected: controller.selectedTab.value == BookingStatus.paid,
+                      onTap: () => controller.onTabChanged(BookingStatus.paid),
                     ),
                     _FilterTab(
                       label: 'All',
-                      isSelected: controller.selectedTab.value == OwnerDashboardTab.all,
-                      onTap: () => controller.onTabChanged(OwnerDashboardTab.all),
+                      isSelected: controller.selectedTab.value == null,
+                      onTap: () => controller.onTabChanged(null),
                     ),
                   ],
                 ),
@@ -131,7 +139,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Filter by Date',
-                    style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: AppStyles.of(context).h3,
                   ),
                   if (controller.selectedDate.value != null)
                     TextButton(
@@ -148,7 +156,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${controller.selectedTab.value.name.capitalizeFirst} Weddings',
+                    '${controller.selectedTab.value?.label ?? 'All'} Weddings',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -158,7 +166,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.changeOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -175,8 +183,8 @@ class OwnerDashboardScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               if (controller.isLoading.value)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
                 )
               else if (controller.bookings.isEmpty)
@@ -189,7 +197,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           'No bookings found for this filter.',
-                          style: GoogleFonts.poppins(color: AppColors.textSecondary),
+                          style: AppStyles.of(context).s14w400Secondary,
                         ),
                       ],
                     ),
@@ -236,7 +244,7 @@ class OwnerDashboardScreen extends StatelessWidget {
             child: Container(
               width: 50,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.white,
+                color: isSelected ? AppColors.primary : AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.divider,
@@ -304,12 +312,13 @@ class _StatCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
+        width: 140,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.08),
+          color: isSelected ? color : color.changeOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(isSelected ? 0.5 : 0.2)),
-          boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10)] : null,
+          border: Border.all(color: color.changeOpacity(isSelected ? 0.5 : 0.2)),
+          boxShadow: isSelected ? [BoxShadow(color: color.changeOpacity(0.3), blurRadius: 10)] : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,7 +338,7 @@ class _StatCard extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? Colors.white.withOpacity(0.9) : AppColors.textSecondary,
+                color: isSelected ? Colors.white.changeOpacity(0.9) : AppColors.textSecondary,
               ),
             ),
           ],
@@ -346,14 +355,15 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final styles = AppStyles.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: Offset(0, 2)),
+        boxShadow: [
+          BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: InkWell(
@@ -366,42 +376,38 @@ class _BookingCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     booking.customerName ?? 'Unknown Customer',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: styles.h3.copyWith(fontSize: 15),
                   ),
                 ),
-                _buildStatusTag(booking.status),
+                _buildStatusTag(context, booking.status),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.home_outlined, size: 14, color: AppColors.grey),
+                Icon(Icons.home_outlined, size: 14, color: AppColors.grey),
                 const SizedBox(width: 4),
                 Text(
                   booking.farm?.name ?? 'Unknown Farm',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                  style: styles.s12w400Secondary,
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey),
+                Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.grey),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('dd MMM yyyy').format(booking.eventDate),
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                  style: styles.s12w400Secondary,
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.people_outline, size: 14, color: AppColors.grey),
+                Icon(Icons.people_outline, size: 14, color: AppColors.grey),
                 const SizedBox(width: 4),
                 Text(
                   '${booking.guestCount} guests',
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                  style: styles.s12w400Secondary,
                 ),
               ],
             ),
@@ -435,20 +441,16 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusTag(BookingStatus status) {
+  Widget _buildStatusTag(BuildContext context, BookingStatus status) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.12),
+        color: status.color.changeOpacity(0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         status.label,
-        style: GoogleFonts.poppins(
-          color: status.color,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
+        style: AppStyles.of(context).labelSmall.copyWith(color: status.color),
       ),
     );
   }
@@ -487,20 +489,16 @@ class _FilterTab extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : AppColors.white,
+            color: isSelected ? AppColors.primary : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.divider,
             ),
-            boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
+            boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.changeOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
           ),
           child: Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
+            style: isSelected ? AppStyles.of(context).s14w600Secondary.copyWith(color: Colors.white) : AppStyles.of(context).s14w400Secondary,
           ),
         ),
       ),

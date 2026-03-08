@@ -1,9 +1,6 @@
 // lib/services/payment_service.dart
 // All Stripe & Supabase payment logic — UI never touches Stripe keys directly
 
-import 'dart:convert';
-import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -67,8 +64,7 @@ class PaymentService {
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'WeddingFarm',
           // Billing details collection
-          billingDetailsCollectionConfiguration:
-              const BillingDetailsCollectionConfiguration(
+          billingDetailsCollectionConfiguration: const BillingDetailsCollectionConfiguration(
             name: CollectionMode.always,
             phone: CollectionMode.always,
           ),
@@ -139,8 +135,7 @@ class PaymentService {
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'WeddingFarm',
           // Show breakdown in description
-          billingDetailsCollectionConfiguration:
-              const BillingDetailsCollectionConfiguration(
+          billingDetailsCollectionConfiguration: const BillingDetailsCollectionConfiguration(
             name: CollectionMode.always,
           ),
           appearance: const PaymentSheetAppearance(
@@ -180,28 +175,16 @@ class PaymentService {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('Not authenticated');
 
-    final response = await _supabase
-        .from('payment_history')
-        .select()
-        .eq('customer_id', userId)
-        .order('created_at', ascending: false);
+    final response = await _supabase.from('payment_history').select().eq('customer_id', userId).order('created_at', ascending: false);
 
-    return (response as List)
-        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return (response as List).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   /// Fetch payments for a specific booking
   Future<List<PaymentModel>> getBookingPayments(String bookingId) async {
-    final response = await _supabase
-        .from('payments')
-        .select()
-        .eq('booking_id', bookingId)
-        .order('created_at', ascending: true);
+    final response = await _supabase.from('payments').select().eq('booking_id', bookingId).order('created_at', ascending: true);
 
-    return (response as List)
-        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return (response as List).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   /// Fetch payments received by an owner (for their farms)
@@ -217,9 +200,7 @@ class PaymentService {
         .eq('status', 'success')
         .order('created_at', ascending: false);
 
-    return (response as List)
-        .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return (response as List).map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
 
@@ -263,8 +244,7 @@ class PaymentResult {
         errorMessage: message,
       );
 
-  factory PaymentResult.cancelled() =>
-      const PaymentResult._(status: PaymentResultStatus.cancelled);
+  factory PaymentResult.cancelled() => const PaymentResult._(status: PaymentResultStatus.cancelled);
 
   bool get isSuccess => status == PaymentResultStatus.success;
   bool get isCancelled => status == PaymentResultStatus.cancelled;

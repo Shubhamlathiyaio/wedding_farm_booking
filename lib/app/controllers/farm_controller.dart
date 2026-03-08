@@ -82,6 +82,89 @@ class FarmController extends GetxController {
     }
   }
 
+  Future<void> updateExistingFarm({
+    required FarmModel existingFarm,
+    required String name,
+    required String location,
+    required String address,
+    required String description,
+    required String category,
+    required double pricePerDay,
+    required double tokenAmount,
+    required int capacity,
+    required List<String> amenities,
+    required List<String> keptPhotoUrls,
+    required List<File> newImageFiles,
+    required bool isAvailable,
+    String? upiId,
+    String? upiName,
+  }) async {
+    isAdding.value = true;
+    try {
+      final List<String> newlyUploadedUrls = [];
+      if (newImageFiles.isNotEmpty) {
+        for (final file in newImageFiles) {
+          final url = await ImageUtils.uploadFarmImage(file.path);
+          if (url != null) newlyUploadedUrls.add(url);
+        }
+      }
+
+      final updatedPhotoUrls = [...keptPhotoUrls, ...newlyUploadedUrls];
+
+      if (updatedPhotoUrls.isEmpty) {
+        throw Exception('At least one photo is required');
+      }
+
+      final farmData = {
+        'name': name,
+        'location': location,
+        'address': address,
+        'description': description,
+        'category': category,
+        'price_per_day': pricePerDay,
+        'token_amount': tokenAmount,
+        'capacity': capacity,
+        'amenities': amenities,
+        'photo_urls': updatedPhotoUrls,
+        'is_available': isAvailable,
+        'upi_id': upiId,
+        'upi_name': upiName,
+      };
+
+      await _farmService.updateFarm(existingFarm.id, farmData);
+
+      final index = ownerFarms.indexWhere((f) => f.id == existingFarm.id);
+      if (index != -1) {
+        ownerFarms[index] = FarmModel(
+          id: existingFarm.id,
+          ownerId: existingFarm.ownerId,
+          name: name,
+          description: description,
+          location: location,
+          address: address,
+          category: category,
+          pricePerDay: pricePerDay,
+          tokenAmount: tokenAmount,
+          capacity: capacity,
+          amenities: amenities,
+          rating: existingFarm.rating,
+          photoUrls: updatedPhotoUrls,
+          isAvailable: isAvailable,
+          upiId: upiId,
+          upiName: upiName,
+        );
+        ownerFarms.refresh();
+      }
+
+      Get.back();
+      _showSuccess('Farm "$name" updated successfully!');
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      isAdding.value = false;
+    }
+  }
+
   void _showError(String message) {
     Get.snackbar('Error', message, backgroundColor: const Color(0xFFD32F2F), colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
   }

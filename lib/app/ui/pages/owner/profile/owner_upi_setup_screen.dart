@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 import '../../../../../services/upi_payment_service.dart';
 import '../../../../controllers/auth_controller.dart';
-import '../../../../utils/constants/app_colors.dart';
 import '../../../../utils/helpers/image_utils.dart';
 import '../../../widgets/custom_buttons.dart';
 
@@ -94,7 +94,7 @@ class _OwnerUpiSetupScreenState extends State<OwnerUpiSetupScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('UPI Payment Setup')),
       body: _isLoading && _upiIdController.text.isEmpty
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -176,7 +176,7 @@ class _OwnerUpiSetupScreenState extends State<OwnerUpiSetupScreen> {
                                 : Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.add_a_photo_outlined, size: 40, color: AppColors.primary),
+                                      Icon(Icons.add_a_photo_outlined, size: 40, color: AppColors.primary),
                                       const SizedBox(height: 8),
                                       Text(
                                         'Upload QR Code',

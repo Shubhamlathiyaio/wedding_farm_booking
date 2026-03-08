@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 import '../../../../controllers/farm_controller.dart';
-import '../../../../utils/constants/app_colors.dart';
 import '../../../../utils/helpers/image_utils.dart';
 import '../../../widgets/custom_buttons.dart';
 import '../../../widgets/custom_dropdown.dart';
@@ -195,7 +195,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_a_photo_outlined, color: AppColors.primary),
+            Icon(Icons.add_a_photo_outlined, color: AppColors.primary),
             const SizedBox(height: 4),
             Text('Add Photo', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.primary)),
           ],

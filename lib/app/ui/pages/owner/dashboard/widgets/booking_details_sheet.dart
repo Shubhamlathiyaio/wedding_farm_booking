@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
+import 'package:wedding_farm_booking/services/upi_payment_service.dart';
 
-import '../../../../../../services/upi_payment_service.dart';
 import '../../../../../controllers/owner_dashboard_controller.dart';
 import '../../../../../data/models/booking_model.dart';
 import '../../../../../utils/constants/app_colors.dart';
+import '../../../../../utils/constants/app_strings.dart';
+import '../../../../../utils/themes/app_styles.dart';
 import '../../../../widgets/custom_buttons.dart';
 
 class BookingDetailsSheet extends StatefulWidget {
@@ -57,9 +60,9 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
@@ -100,21 +103,13 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Booking Details',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+              T.bookingDetails,
+              style: AppStyles.of(context).h2,
             ),
             const SizedBox(height: 4),
             Text(
-              'ID: ${widget.booking.id.substring(0, 8).toUpperCase()}',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                letterSpacing: 1,
-              ),
+              '${T.id}: ${widget.booking.id.substring(0, 8).toUpperCase()}',
+              style: AppStyles.of(context).s12w400Secondary,
             ),
           ],
         ),
@@ -127,16 +122,12 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.12),
+        color: status.color.changeOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         status.label.toUpperCase(),
-        style: GoogleFonts.poppins(
-          color: status.color,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
+        style: AppStyles.of(context).labelSmall.copyWith(color: status.color),
       ),
     );
   }
@@ -145,7 +136,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.divider),
       ),
@@ -153,14 +144,10 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.changeOpacity(0.1),
             child: Text(
               widget.booking.customerName?[0].toUpperCase() ?? 'U',
-              style: GoogleFonts.poppins(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-              ),
+              style: AppStyles.of(context).h3.copyWith(color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 16),
@@ -170,19 +157,12 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
               children: [
                 Text(
                   widget.booking.customerName ?? 'Unknown Customer',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppStyles.of(context).s16w600Primary,
                 ),
                 if (widget.booking.customerPhone != null)
                   Text(
                     widget.booking.customerPhone!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: AppStyles.of(context).s13w400Secondary,
                   ),
               ],
             ),
@@ -190,7 +170,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
           if (widget.booking.customerPhone != null)
             IconButton(
               onPressed: () => widget.controller.makeCall(widget.booking.customerPhone),
-              icon: const Icon(Icons.call, color: AppColors.primary),
+              icon: Icon(Icons.call, color: AppColors.primary),
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.primary.withAlpha(20),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -208,31 +188,27 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Information',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+            T.information,
+            style: AppStyles.of(context).s14w600Secondary,
           ),
         ),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.divider),
           ),
           child: Column(
             children: [
-              _detailRow(Icons.home_outlined, 'Farm', widget.booking.farm?.name ?? '—'),
+              _detailRow(Icons.home_outlined, T.farm, widget.booking.farm?.name ?? '—'),
               const Divider(height: 24),
-              _detailRow(Icons.calendar_today_outlined, 'Event Date', DateFormat('EEEE, dd MMM yyyy').format(widget.booking.eventDate)),
+              _detailRow(Icons.calendar_today_outlined, T.eventDate, DateFormat('EEEE, dd MMM yyyy').format(widget.booking.eventDate)),
               const Divider(height: 24),
-              _detailRow(Icons.people_outline, 'Guests', '${widget.booking.guestCount} People'),
+              _detailRow(Icons.people_outline, T.guests, '${widget.booking.guestCount} People'),
               if (widget.booking.notes?.isNotEmpty ?? false) ...[
                 const Divider(height: 24),
-                _detailRow(Icons.notes, 'Customer Notes', widget.booking.notes!),
+                _detailRow(Icons.notes, T.customerNotes, widget.booking.notes!),
               ],
             ],
           ),
@@ -248,18 +224,14 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'My Private Notes',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+            T.myPrivateNotes,
+            style: AppStyles.of(context).s14w600Secondary,
           ),
         ),
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.divider),
           ),
@@ -269,17 +241,18 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
                 child: TextField(
                   controller: _noteController,
                   maxLines: 2,
-                  style: GoogleFonts.poppins(fontSize: 13),
+                  style: AppStyles.of(context).s13w400Secondary.copyWith(color: AppColors.textPrimary),
                   decoration: InputDecoration(
-                    hintText: 'Add a private note...',
-                    hintStyle: GoogleFonts.poppins(fontSize: 13, color: AppColors.grey),
+                    hintText: T.addPrivateNote,
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
                   ),
                 ),
               ),
               IconButton(
                 onPressed: () => widget.controller.updateOwnerNote(widget.booking.id, _noteController.text),
-                icon: const Icon(Icons.save_outlined, color: AppColors.primary),
+                icon: Icon(Icons.save_outlined, color: AppColors.primary),
               ),
             ],
           ),
@@ -295,21 +268,14 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         const SizedBox(width: 12),
         Text(
           label,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
+          style: AppStyles.of(context).s14w400Secondary,
         ),
         const Spacer(),
         Expanded(
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+            style: AppStyles.of(context).s14w600Secondary.copyWith(color: AppColors.textPrimary),
           ),
         ),
       ],
@@ -323,27 +289,23 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'Payment',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+            T.payment,
+            style: AppStyles.of(context).s14w600Secondary,
           ),
         ),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.divider),
           ),
           child: Column(
             children: [
-              _paymentRow('Token Amount', '₹${widget.booking.tokenAmount.toStringAsFixed(0)}',
+              _paymentRow(T.tokenAmount, '₹${widget.booking.tokenAmount.toStringAsFixed(0)}',
                   (widget.booking.status == BookingStatus.booked || widget.booking.status == BookingStatus.paid) ? Colors.green : Colors.orange),
               const Divider(height: 24),
-              _paymentRow('Total Amount', '₹${widget.booking.totalAmount.toStringAsFixed(0)}', widget.booking.status == BookingStatus.paid ? Colors.green : Colors.grey),
+              _paymentRow(T.totalAmount, '₹${widget.booking.totalAmount.toStringAsFixed(0)}', widget.booking.status == BookingStatus.paid ? Colors.green : Colors.grey),
               const SizedBox(height: 16),
               Obx(() {
                 if (_isLoadingPayments.value) {
@@ -351,16 +313,16 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
                 }
                 if (_payments.isEmpty) {
                   return Text(
-                    'No payment screenshots uploaded yet.',
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+                    T.noPaymentScreenshots,
+                    style: AppStyles.of(context).s12w400Secondary.copyWith(fontStyle: FontStyle.italic),
                   );
                 }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Payment Proofs',
-                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      T.paymentProofs,
+                      style: AppStyles.of(context).labelSmall.copyWith(color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -390,10 +352,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
+          style: AppStyles.of(context).s14w400Secondary,
         ),
         const Spacer(),
         Column(
@@ -401,11 +360,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
           children: [
             Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+              style: AppStyles.of(context).s16w600Primary,
             ),
             Container(
               height: 4,
@@ -445,7 +400,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
                     placeholder: (_, __) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                   );
                 }
-                return const Center(child: Icon(Icons.image, color: AppColors.grey));
+                return Center(child: Icon(Icons.image, color: AppColors.grey));
               },
             ),
           ),
@@ -513,7 +468,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
       return Column(
         children: [
           AppButton(
-            title: 'Confirm Booking',
+            title: T.confirmBooking,
             onPressed: () {
               Navigator.pop(context);
               widget.controller.confirmBooking(widget.booking.id);
@@ -521,7 +476,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
           ),
           const SizedBox(height: 12),
           AppButton(
-            title: 'Reject',
+            title: T.reject,
             type: AppButtonType.danger,
             onPressed: () {
               Navigator.pop(context);
@@ -537,7 +492,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
         children: [
           Expanded(
             child: AppButton(
-              title: 'Mark as Paid',
+              title: T.markAsPaid,
               onPressed: () {
                 Navigator.pop(context);
                 widget.controller.markAsPaid(widget.booking.id);
@@ -547,7 +502,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: AppButton(
-              title: 'Release Farm',
+              title: T.releaseFarm,
               type: AppButtonType.danger,
               onPressed: () {
                 Navigator.pop(context);
@@ -561,7 +516,7 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
 
     if (widget.booking.status == BookingStatus.paid) {
       return AppButton(
-        title: 'Release Farm',
+        title: T.releaseFarm,
         type: AppButtonType.danger,
         onPressed: () {
           Navigator.pop(context);
@@ -578,10 +533,10 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Release Farm?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        title: Text(T.releaseFarmTitle, style: AppStyles.of(context).h3),
         content: Text(
-          'This will release the farm and cancel the booking. This action cannot be undone.',
-          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
+          T.releaseFarmContent,
+          style: AppStyles.of(context).s13w400Secondary,
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -603,10 +558,10 @@ class _BookingDetailsSheetState extends State<BookingDetailsSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Reject Booking?', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        title: Text(T.rejectBookingTitle, style: AppStyles.of(context).h3),
         content: Text(
-          'This will reject the booking and cancel the request. This action cannot be undone.',
-          style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 13),
+          T.rejectBookingContent,
+          style: AppStyles.of(context).s13w400Secondary,
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),

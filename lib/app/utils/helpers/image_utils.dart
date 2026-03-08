@@ -6,10 +6,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 import '../../../gen/assets.gen.dart';
 import '../../ui/widgets/custom_image_view.dart';
-import '../constants/app_colors.dart';
 
 class ImageUtils {
   static Future<String?> pickImage(BuildContext context) async {
@@ -50,9 +50,9 @@ class ImageUtils {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
       child: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         child: SafeArea(
           child: Column(
@@ -65,7 +65,7 @@ class ImageUtils {
                   style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
               ),
-              const Divider(color: AppColors.divider, height: 1),
+              Divider(color: AppColors.divider, height: 1),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 28),
                 child: Row(

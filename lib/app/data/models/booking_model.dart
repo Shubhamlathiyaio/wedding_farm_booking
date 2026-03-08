@@ -57,7 +57,8 @@ class BookingModel {
   final String id;
   final String farmId;
   final String customerId;
-  final DateTime eventDate;
+  final DateTime eventDate; // Keep for backward compatibility
+  final List<DateTime> eventDates;
   final int guestCount;
   final String? notes; // Customer notes
   final String? ownerNote; // Owner notes
@@ -78,6 +79,7 @@ class BookingModel {
     required this.farmId,
     required this.customerId,
     required this.eventDate,
+    this.eventDates = const [],
     required this.guestCount,
     this.notes,
     this.ownerNote,
@@ -119,7 +121,8 @@ class BookingModel {
       id: json['id'] as String,
       farmId: json['farm_id'] as String,
       customerId: json['customer_id'] as String,
-      eventDate: DateTime.parse(json['event_date'] as String),
+      eventDate: json['event_date'] != null ? DateTime.parse(json['event_date'] as String) : DateTime.now(),
+      eventDates: (json['event_dates'] as List<dynamic>?)?.map((e) => DateTime.parse(e.toString())).toList() ?? (json['event_date'] != null ? [DateTime.parse(json['event_date'] as String)] : []),
       guestCount: json['guest_count'] as int? ?? 0,
       notes: json['notes'] as String?,
       ownerNote: json['owner_note'] as String?,
@@ -147,7 +150,8 @@ class BookingModel {
         'id': id,
         'farm_id': farmId,
         'customer_id': customerId,
-        'event_date': eventDate.toIso8601String().split('T').first,
+        'event_date': eventDates.isNotEmpty ? eventDates.first.toIso8601String().split('T').first : eventDate.toIso8601String().split('T').first,
+        'event_dates': eventDates.map((d) => d.toIso8601String().split('T').first).toList(),
         'guest_count': guestCount,
         'notes': notes,
         'status': BookingStatus.pending.name,

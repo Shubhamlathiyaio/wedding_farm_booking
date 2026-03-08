@@ -4,15 +4,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wedding_farm_booking/app/data/models/payment_service.dart';
-
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 class TokenPaymentScreen extends StatefulWidget {
   final String bookingId;
   final String farmId;
   final String farmName;
   final String? farmImageUrl;
-  final double tokenAmount;      // non-refundable lock amount
-  final double totalAmount;      // full booking value
+  final double tokenAmount; // non-refundable lock amount
+  final double totalAmount; // full booking value
   final DateTime bookingDate;
 
   const TokenPaymentScreen({
@@ -97,10 +97,10 @@ class _TokenPaymentScreenState extends State<TokenPaymentScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Center(
+            const Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.lock_outline, size: 14, color: Colors.grey),
                   SizedBox(width: 4),
                   Text(
@@ -202,7 +202,7 @@ class _FarmCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.changeOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -241,8 +241,7 @@ class _FarmCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: Color(0xFF8B5E3C)),
+                    const Icon(Icons.calendar_today, size: 16, color: Color(0xFF8B5E3C)),
                     const SizedBox(width: 6),
                     Text(
                       DateFormat('EEEE, d MMMM yyyy').format(bookingDate),
@@ -284,7 +283,7 @@ class _PaymentBreakdownCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.changeOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -394,9 +393,9 @@ class _TokenNoticeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFFFE082)),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Icon(Icons.info_outline, color: Color(0xFFF9A825), size: 20),
           SizedBox(width: 10),
           Expanded(
@@ -440,7 +439,7 @@ class _PaymentSuccessSheet extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50).withOpacity(0.1),
+              color: const Color(0xFF4CAF50).changeOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 48),
@@ -510,7 +509,7 @@ class _SummaryTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.changeOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

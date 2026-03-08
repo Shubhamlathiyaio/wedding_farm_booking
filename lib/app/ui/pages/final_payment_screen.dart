@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wedding_farm_booking/app/data/models/payment_service.dart';
-
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 class FinalPaymentScreen extends StatefulWidget {
   final String bookingId;
@@ -104,10 +104,10 @@ class _FinalPaymentScreenState extends State<FinalPaymentScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Center(
+            const Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.lock_outline, size: 14, color: Colors.grey),
                   SizedBox(width: 4),
                   Text(
@@ -227,7 +227,7 @@ class _BookingSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.changeOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -250,7 +250,7 @@ class _BookingSummaryCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5E3C).withOpacity(0.1),
+                color: const Color(0xFF8B5E3C).changeOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.villa, color: Color(0xFF8B5E3C)),
@@ -286,7 +286,7 @@ class _BookingSummaryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    color: const Color(0xFF4CAF50).changeOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
@@ -329,7 +329,7 @@ class _FinalBreakdownCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.changeOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -419,10 +419,10 @@ class _PaymentMethodsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFC8E6C9)),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Accepted Payment Methods',
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -430,9 +430,9 @@ class _PaymentMethodsCard extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
-            children: const [
+            children: [
               _MethodChip(label: '💳 Cards'),
               SizedBox(width: 8),
               _MethodChip(label: '📱 UPI'),

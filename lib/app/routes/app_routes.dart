@@ -12,4 +12,5 @@ class AppRoutes {
   // Owner routes
   static const String ownerShell = '/owner';
   static const String addFarm = '/owner/add-farm';
+  static const String editFarm = '/owner/edit-farm';
 }

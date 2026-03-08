@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 import '../../../../controllers/home_controller.dart';
 import '../../../../data/models/farm_model.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../../utils/constants/app_colors.dart';
 import '../../../widgets/custom_image_view.dart';
+import '../../../widgets/multi_date_picker_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,7 @@ class HomeScreen extends StatelessWidget {
           slivers: [
             SliverToBoxAdapter(child: _buildHeader(controller)),
             SliverToBoxAdapter(child: _buildSearchBar(controller)),
+            SliverToBoxAdapter(child: _buildDateFilter(context, controller)),
             SliverToBoxAdapter(child: _buildFilters(controller)),
             SliverToBoxAdapter(child: _buildViewToggle(controller)),
             SliverToBoxAdapter(child: _buildContent(controller)),
@@ -67,7 +69,7 @@ class HomeScreen extends StatelessWidget {
         onChanged: c.onSearchChanged,
         decoration: InputDecoration(
           hintText: 'Search farms or locations...',
-          prefixIcon: const Icon(Icons.search, color: AppColors.grey),
+          prefixIcon: Icon(Icons.search, color: AppColors.grey),
           filled: true,
           fillColor: AppColors.greyLight,
           border: OutlineInputBorder(
@@ -77,6 +79,53 @@ class HomeScreen extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
+    );
+  }
+
+  Widget _buildDateFilter(BuildContext context, HomeController c) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Obx(() {
+        final hasDates = c.selectedDates.isNotEmpty;
+        return Row(
+          children: [
+            ActionChip(
+              avatar: Icon(
+                Icons.calendar_month,
+                size: 16,
+                color: hasDates ? AppColors.white : AppColors.primary,
+              ),
+              label: Text(hasDates ? '${c.selectedDates.length} Dates Selected' : 'Filter by Date'),
+              backgroundColor: hasDates ? AppColors.primary : AppColors.primaryLight,
+              labelStyle: GoogleFonts.poppins(
+                color: hasDates ? AppColors.white : AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              side: BorderSide(color: AppColors.primary),
+              onPressed: () async {
+                final dates = await MultiDatePickerSheet.show(
+                  context,
+                  title: 'Filter by Availability',
+                  initialDates: c.selectedDates.toList(),
+                );
+                if (dates != null) {
+                  c.onDatesChanged(dates);
+                }
+              },
+            ),
+            if (hasDates) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: c.clearDates,
+                icon: const Icon(Icons.clear, size: 20),
+                color: AppColors.grey,
+                tooltip: 'Clear dates',
+              ),
+            ],
+          ],
+        );
+      }),
     );
   }
 
@@ -141,8 +190,8 @@ class HomeScreen extends StatelessWidget {
   Widget _buildContent(HomeController c) {
     return Obx(() {
       if (c.isLoading.value) {
-        return const Padding(
-          padding: EdgeInsets.only(top: 60),
+        return Padding(
+          padding: const EdgeInsets.only(top: 60),
           child: Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
@@ -176,7 +225,7 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.map_outlined, size: 56, color: AppColors.grey),
+          Icon(Icons.map_outlined, size: 56, color: AppColors.grey),
           const SizedBox(height: 12),
           Text(
             'Map View',
@@ -196,7 +245,7 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 60),
       child: Column(
         children: [
-          const Icon(Icons.search_off_rounded, size: 64, color: AppColors.greyLight),
+          Icon(Icons.search_off_rounded, size: 64, color: AppColors.greyLight),
           const SizedBox(height: 12),
           Text(
             'No farms found',
@@ -229,24 +278,55 @@ class FarmCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: Offset(0, 2)),
+          boxShadow: [
+            BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero image
-            Hero(
-              tag: 'farm-${farm.id}',
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: ImageView(
-                  farm.firstPhotoUrl,
-                  height: 180,
-                  width: double.infinity,
+            Stack(
+              children: [
+                Hero(
+                  tag: 'farm-${farm.id}',
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: ImageView(
+                      farm.firstPhotoUrl,
+                      height: 180,
+                      width: double.infinity,
+                    ),
+                  ),
                 ),
-              ),
+                Obx(() {
+                  final status = Get.find<HomeController>().userBookingsStatusMap[farm.id];
+                  if (status == null) return const SizedBox.shrink();
+
+                  return Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: status.color,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                        ],
+                      ),
+                      child: Text(
+                        status.label,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(14),
@@ -276,7 +356,7 @@ class FarmCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
+                            Icon(Icons.star_rounded, size: 14, color: AppColors.primary),
                             const SizedBox(width: 2),
                             Text(
                               farm.rating.toStringAsFixed(1),
@@ -294,7 +374,7 @@ class FarmCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.grey),
+                      Icon(Icons.location_on_outlined, size: 14, color: AppColors.grey),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(

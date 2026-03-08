@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 import '../app/utils/constants/app_colors.dart';
 import '../services/upi_payment_service.dart';
@@ -169,7 +170,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
           if (_isProcessing)
             Container(
               color: Colors.black45,
-              child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
             ),
         ],
       ),
@@ -183,7 +184,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: AppColors.cardShadow, blurRadius: 15, offset: Offset(0, 5))],
+        boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(
         children: [
@@ -192,7 +193,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.receipt_long, color: AppColors.primary),
+                child: Icon(Icons.receipt_long, color: AppColors.primary),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -206,7 +207,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: Colors.orange.changeOpacity(0.1), borderRadius: BorderRadius.circular(20)),
                 child: Text((widget.request['payment_type'] as String).toUpperCase(), style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)),
               ),
             ],
@@ -242,10 +243,10 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Transaction Screenshot', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            const Row(
+            Row(
               children: [
                 Icon(Icons.zoom_in, size: 16, color: AppColors.textSecondary),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Text('Pinch to zoom', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
@@ -258,7 +259,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [BoxShadow(color: AppColors.cardShadow, blurRadius: 20, offset: Offset(0, 10))],
+            boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 20, offset: const Offset(0, 10))],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -296,7 +297,7 @@ class _PaymentVerificationDetailScreenState extends State<PaymentVerificationDet
               onPressed: _isProcessing ? null : _showRejectDialog,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error, width: 1.5),
+                side: BorderSide(color: AppColors.error, width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),

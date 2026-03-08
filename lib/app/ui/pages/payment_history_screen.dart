@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:wedding_farm_booking/app/data/models/payment_model.dart';
 import 'package:wedding_farm_booking/app/data/models/payment_service.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 enum _HistoryTab { customer, owner }
 
@@ -18,8 +19,7 @@ class PaymentHistoryScreen extends StatefulWidget {
   State<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
 }
 
-class _PaymentHistoryScreenState extends State<PaymentHistoryScreen>
-    with SingleTickerProviderStateMixin {
+class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _currencyFmt = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
@@ -146,9 +146,7 @@ class _PaymentList extends StatelessWidget {
     return map;
   }
 
-  double get _totalSucceeded => payments
-      .where((p) => p.status == PaymentStatus.succeeded)
-      .fold(0.0, (sum, p) => sum + p.amount);
+  double get _totalSucceeded => payments.where((p) => p.status == PaymentStatus.succeeded).fold(0.0, (sum, p) => sum + p.amount);
 
   @override
   Widget build(BuildContext context) {
@@ -157,8 +155,7 @@ class _PaymentList extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 64, color: Colors.grey.shade300),
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
               emptyMessage,
@@ -181,9 +178,7 @@ class _PaymentList extends StatelessWidget {
           SliverToBoxAdapter(
             child: _SummaryBanner(
               totalAmount: _totalSucceeded,
-              paymentCount: payments
-                  .where((p) => p.status == PaymentStatus.succeeded)
-                  .length,
+              paymentCount: payments.where((p) => p.status == PaymentStatus.succeeded).length,
               currencyFmt: currencyFmt,
               isOwnerView: isOwnerView,
             ),
@@ -308,7 +303,7 @@ class _BookingPaymentGroup extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.changeOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -326,7 +321,7 @@ class _BookingPaymentGroup extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5E3C).withOpacity(0.1),
+                    color: const Color(0xFF8B5E3C).changeOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.villa, color: Color(0xFF8B5E3C)),
@@ -398,8 +393,7 @@ class _PaymentRow extends StatelessWidget {
     }
   }
 
-  IconData get _typeIcon =>
-      payment.paymentType == PaymentType.token ? Icons.lock : Icons.check_circle_outline;
+  IconData get _typeIcon => payment.paymentType == PaymentType.token ? Icons.lock : Icons.check_circle_outline;
 
   @override
   Widget build(BuildContext context) {
@@ -411,7 +405,7 @@ class _PaymentRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: _statusColor.withOpacity(0.1),
+              color: _statusColor.changeOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(_typeIcon, size: 18, color: _statusColor),
@@ -431,9 +425,7 @@ class _PaymentRow extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      payment.paidAt != null
-                          ? DateFormat('d MMM, h:mm a').format(payment.paidAt!)
-                          : DateFormat('d MMM').format(payment.createdAt),
+                      payment.paidAt != null ? DateFormat('d MMM, h:mm a').format(payment.paidAt!) : DateFormat('d MMM').format(payment.createdAt),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey.shade500,
@@ -468,7 +460,7 @@ class _PaymentRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _statusColor.withOpacity(0.1),
+                  color: _statusColor.changeOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

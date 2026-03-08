@@ -65,7 +65,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
+                decoration:  BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),

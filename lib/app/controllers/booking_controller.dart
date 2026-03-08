@@ -20,7 +20,7 @@ class BookingController extends GetxController {
   final RxBool isProcessing = false.obs;
 
   // Booking form state
-  final Rxn<DateTime> selectedDate = Rxn<DateTime>();
+  final RxList<DateTime> selectedDates = <DateTime>[].obs;
   final RxInt guestCount = 50.obs;
 
   @override
@@ -44,7 +44,7 @@ class BookingController extends GetxController {
 
   Future<void> requestBooking({required FarmModel farm}) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null || selectedDate.value == null) return;
+    if (userId == null || selectedDates.isEmpty) return;
 
     isProcessing.value = true;
     try {
@@ -59,7 +59,8 @@ class BookingController extends GetxController {
         id: const Uuid().v4(),
         farmId: farm.id,
         customerId: userId,
-        eventDate: selectedDate.value!,
+        eventDate: selectedDates.first, // Keep for backward compat
+        eventDates: selectedDates.toList(),
         guestCount: guestCount.value,
         status: BookingStatus.pending,
         tokenPaid: false,

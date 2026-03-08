@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 import '../../../data/services/auth_service.dart';
 import '../../../routes/app_routes.dart';
@@ -72,7 +73,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.changeOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -95,7 +96,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 Text(
                   'Find your perfect wedding venue',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.changeOpacity(0.85),
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
                   ),

@@ -7,20 +7,20 @@ import '../data/models/booking_model.dart';
 import '../data/services/booking_service.dart';
 import '../data/services/edge_function_service.dart';
 
-enum OwnerDashboardTab { pending, booked, paid, all }
-
 class OwnerDashboardController extends GetxController {
   final BookingService _bookingService = BookingService();
   final EdgeFunctionService _edgeFnService = EdgeFunctionService();
 
-  final RxInt upcomingCount = 0.obs;
-  final RxInt activeCount = 0.obs;
+  final RxInt pendingCount = 0.obs;
+  final RxInt bookedCount = 0.obs;
+  final RxInt paidCount = 0.obs;
   final RxList<BookingModel> bookings = <BookingModel>[].obs;
   final RxList<BookingModel> pendingBookings = <BookingModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isReleasing = false.obs;
 
-  final Rx<OwnerDashboardTab> selectedTab = OwnerDashboardTab.pending.obs;
+  // null = show all
+  final Rxn<BookingStatus> selectedTab = Rxn<BookingStatus>(BookingStatus.pending);
   final Rxn<DateTime> selectedDate = Rxn<DateTime>();
 
   @override
@@ -35,15 +35,17 @@ class OwnerDashboardController extends GetxController {
     isLoading.value = true;
     try {
       final results = await Future.wait([
-        _bookingService.getUpcomingCount(userId),
-        _bookingService.getActiveCount(userId),
+        _bookingService.getPendingCount(userId),
+        _bookingService.getBookedCount(userId),
+        _bookingService.getPaidCount(userId),
         _fetchFilteredBookings(userId),
         _bookingService.getPendingBookings(userId),
       ]);
-      upcomingCount.value = results[0] as int;
-      activeCount.value = results[1] as int;
-      bookings.value = results[2] as List<BookingModel>;
-      pendingBookings.value = results[3] as List<BookingModel>;
+      pendingCount.value = results[0] as int;
+      bookedCount.value = results[1] as int;
+      paidCount.value = results[2] as int;
+      bookings.value = results[3] as List<BookingModel>;
+      pendingBookings.value = results[4] as List<BookingModel>;
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -52,21 +54,7 @@ class OwnerDashboardController extends GetxController {
   }
 
   Future<List<BookingModel>> _fetchFilteredBookings(String userId) async {
-    List<BookingStatus>? statuses;
-    switch (selectedTab.value) {
-      case OwnerDashboardTab.pending:
-        statuses = [BookingStatus.pending];
-        break;
-      case OwnerDashboardTab.booked:
-        statuses = [BookingStatus.booked, BookingStatus.paid];
-        break;
-      case OwnerDashboardTab.paid:
-        statuses = [BookingStatus.paid];
-        break;
-      case OwnerDashboardTab.all:
-        statuses = null;
-        break;
-    }
+    final List<BookingStatus>? statuses = selectedTab.value != null ? [selectedTab.value!] : null;
 
     return await _bookingService.getOwnerBookings(
       userId,
@@ -75,7 +63,8 @@ class OwnerDashboardController extends GetxController {
     );
   }
 
-  void onTabChanged(OwnerDashboardTab tab) {
+  // Pass null to show all bookings
+  void onTabChanged(BookingStatus? tab) {
     selectedTab.value = tab;
     loadDashboard();
   }
@@ -129,7 +118,8 @@ class OwnerDashboardController extends GetxController {
     if (userId == null) return;
     isLoading.value = true;
     try {
-      await Supabase.instance.client.from('bookings').update({'status': BookingStatus.booked.name}).eq('id', bookingId).eq('owner_id', userId);
+      await Supabase.instance.client.from('bookings').update({'status': BookingStatus.booked.name}).eq('id', bookingId);
+      selectedTab.value = BookingStatus.booked;
       await loadDashboard();
       _showSuccess('Booking confirmed/booked successfully.');
     } catch (e) {
@@ -144,7 +134,8 @@ class OwnerDashboardController extends GetxController {
     if (userId == null) return;
     isLoading.value = true;
     try {
-      await Supabase.instance.client.from('bookings').update({'status': BookingStatus.paid.name}).eq('id', bookingId).eq('owner_id', userId);
+      await Supabase.instance.client.from('bookings').update({'status': BookingStatus.paid.name}).eq('id', bookingId);
+      selectedTab.value = BookingStatus.paid;
       await loadDashboard();
       _showSuccess('Booking marked as fully paid.');
     } catch (e) {

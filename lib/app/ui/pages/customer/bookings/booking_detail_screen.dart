@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
+import 'package:wedding_farm_booking/app/utils/themes/app_styles.dart';
 
 import '../../../../../screens/upi_payment_screen.dart';
 import '../../../../../services/upi_payment_service.dart';
@@ -65,7 +67,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [BoxShadow(color: AppColors.cardShadow, blurRadius: 20, offset: Offset(0, 8))],
+        boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 20, offset: const Offset(0, 8))],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -84,10 +86,16 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   Positioned(
                     top: 16,
                     right: 16,
-                    child: FloatingActionButton.small(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
                       onPressed: () => controller.makeCall(booking.ownerPhone),
-                      backgroundColor: Colors.white,
-                      child: const Icon(Icons.call, color: AppColors.primary),
+                      icon: const Icon(Icons.phone, size: 16),
+                      label: Text('Call Owner', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                   ),
               ],
@@ -108,7 +116,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+                    Icon(Icons.location_on, size: 18, color: AppColors.primary),
                     const SizedBox(width: 6),
                     Text(
                       farm?.location ?? 'Location not specified',
@@ -179,7 +187,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.changeOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -212,7 +220,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
           child: Column(
             children: [
-              const Icon(Icons.history, color: AppColors.grey, size: 40),
+              Icon(Icons.history, color: AppColors.grey, size: 40),
               const SizedBox(height: 12),
               Text('No payment history found', style: GoogleFonts.poppins(color: AppColors.textSecondary, fontSize: 14)),
             ],
@@ -265,7 +273,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: statusColor.changeOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                 child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
               ),
             ],
@@ -273,9 +281,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildMetricSmall('Amount', '₹$amount'),
+              _buildMetricSmall(context, 'Amount', '₹$amount'),
               const SizedBox(width: 24),
-              if (ref != null) _buildMetricSmall('UTR', ref),
+              if (ref != null) _buildMetricSmall(context, 'UTR', ref),
               const Spacer(),
               _buildScreenshotButton(payment['screenshot_url']),
             ],
@@ -285,7 +293,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.red.withOpacity(0.05), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: Colors.red.changeOpacity(0.05), borderRadius: BorderRadius.circular(8)),
               child: Text('Reason: ${payment['rejection_reason']}', style: const TextStyle(color: Colors.red, fontSize: 12, fontStyle: FontStyle.italic)),
             ),
           ],
@@ -294,12 +302,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  Widget _buildMetricSmall(String label, String value) {
+  Widget _buildMetricSmall(BuildContext context, String label, String value) {
+    final styles = AppStyles.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        Text(label, style: styles.s12w400Secondary),
+        Text(value, style: styles.s13w400Secondary.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
       ],
     );
   }
@@ -310,7 +319,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(8)),
-        child: const Icon(Icons.image, size: 20, color: AppColors.primary),
+        child: Icon(Icons.image, size: 20, color: AppColors.primary),
       ),
     );
   }
@@ -363,8 +372,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.05),
-            border: const Border(top: BorderSide(color: AppColors.divider)),
+            color: Colors.blue.changeOpacity(0.05),
+            border: Border(top: BorderSide(color: AppColors.divider)),
           ),
           child: Row(
             children: [
@@ -381,8 +390,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         );
       }
 
-      if (booking.status == BookingStatus.booked || (booking.status == BookingStatus.paid && !hasPending)) {
-        final bool isRemaining = booking.status == BookingStatus.paid;
+      if (booking.status == BookingStatus.booked && !hasPending) {
         return Container(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: ElevatedButton(
@@ -393,7 +401,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: Text(
-              isRemaining ? 'Pay Remaining Balance' : 'Pay Token Now',
+              'Pay Remaining Balance',
               style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
@@ -404,8 +412,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.05),
-            border: const Border(top: BorderSide(color: AppColors.divider)),
+            color: Colors.orange.changeOpacity(0.05),
+            border: Border(top: BorderSide(color: AppColors.divider)),
           ),
           child: Row(
             children: [
@@ -433,7 +441,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: AppColors.cardShadow, blurRadius: 10, offset: Offset(0, 4))],
+        boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,7 +512,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               leading: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Colors.purple.changeOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                 child: const Icon(Icons.qr_code_scanner, color: Colors.purple),
               ),
               title: Text('UPI Manual Transfer', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
 
 import '../../../../controllers/farm_controller.dart';
 import '../../../../data/models/farm_model.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../../utils/constants/app_colors.dart';
 import '../../../widgets/custom_image_view.dart';
 
 class OwnerFarmsScreen extends StatelessWidget {
@@ -29,7 +29,7 @@ class OwnerFarmsScreen extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+          return Center(child: CircularProgressIndicator(color: AppColors.primary));
         }
         if (controller.ownerFarms.isEmpty) {
           return Center(
@@ -43,7 +43,7 @@ class OwnerFarmsScreen extends StatelessWidget {
                     color: AppColors.primaryLight,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.yard_outlined, size: 48, color: AppColors.primary),
+                  child: Icon(Icons.yard_outlined, size: 48, color: AppColors.primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -87,8 +87,8 @@ class _OwnerFarmCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: Offset(0, 2)),
+        boxShadow: [
+          BoxShadow(color: AppColors.cardShadow, blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -103,16 +103,27 @@ class _OwnerFarmCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    farm.name,
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          farm.name,
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Get.toNamed(AppRoutes.editFarm, arguments: farm),
+                        child: Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 12, color: AppColors.grey),
+                      Icon(Icons.location_on_outlined, size: 12, color: AppColors.grey),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(

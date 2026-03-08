@@ -13,6 +13,7 @@ class AppConfig {
   static const String farmsTable = 'farms';
   static const String bookingsTable = 'bookings';
   static const String paymentsTable = 'payments';
+  static const String reviewsTable = 'reviews';
 
   // Edge functions
   static const String confirmTokenPaymentFn = 'confirm-token-payment';

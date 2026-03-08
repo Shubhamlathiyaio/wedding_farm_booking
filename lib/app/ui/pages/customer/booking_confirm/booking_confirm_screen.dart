@@ -15,11 +15,11 @@ class BookingConfirmScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final args = Get.arguments as Map<String, dynamic>;
     final FarmModel farm = args['farm'] as FarmModel;
-    final DateTime date = args['date'] as DateTime;
+    final List<DateTime> dates = (args['dates'] as List<dynamic>?)?.map((e) => e as DateTime).toList() ?? [];
     final int guestCount = args['guestCount'] as int;
     final controller = Get.find<BookingController>();
 
-    return Scaffold( 
+    return Scaffold(
       appBar: AppBar(title: const Text('Request Booking')),
       body: SafeArea(
         child: Padding(
@@ -49,7 +49,7 @@ class BookingConfirmScreen extends StatelessWidget {
                     const SizedBox(height: 14),
                     _infoRow(Icons.home_outlined, 'Farm', farm.name),
                     const SizedBox(height: 8),
-                    _infoRow(Icons.calendar_today_outlined, 'Event Date', DateFormat('dd MMM yyyy').format(date)),
+                    _infoRow(Icons.calendar_today_outlined, 'Event Dates', dates.map((d) => DateFormat('dd MMM yyyy').format(d)).join(', ')),
                     const SizedBox(height: 8),
                     _infoRow(Icons.people_outline, 'Guests', '$guestCount guests'),
                     const SizedBox(height: 8),
@@ -69,7 +69,7 @@ class BookingConfirmScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 28),
+                    Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 28),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +105,7 @@ class BookingConfirmScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 18),
+                    Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

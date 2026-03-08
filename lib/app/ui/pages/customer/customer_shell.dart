@@ -24,10 +24,10 @@ class _CustomerShellState extends State<CustomerShell> {
     Get.put(BookingController());
   }
 
-  final _pages = const [
-    HomeScreen(),
-    BookingListScreen(),
-    CustomerProfileScreen(),
+  final _pages = [
+    const HomeScreen(),
+    const BookingListScreen(),
+    const CustomerProfileScreen(),
   ];
 
   @override

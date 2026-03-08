@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
 import '../../../../controllers/booking_controller.dart';
 import '../../../../data/models/farm_model.dart';
+import '../../../../data/models/review_model.dart';
 import '../../../../data/services/farm_service.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../../utils/constants/app_colors.dart';
 import '../../../widgets/custom_buttons.dart';
 import '../../../widgets/custom_image_view.dart';
+import '../../../widgets/multi_date_picker_sheet.dart';
 
 class FarmDetailScreen extends StatelessWidget {
   const FarmDetailScreen({super.key});
@@ -28,7 +31,7 @@ class FarmDetailScreen extends StatelessWidget {
         future: FarmService().getFarmById(farmId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
@@ -112,12 +115,12 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                                 height: 8,
                                 width: _currentPage == index ? 24 : 8,
                                 decoration: BoxDecoration(
-                                  color: _currentPage == index ? AppColors.primary : Colors.white.withOpacity(0.5),
+                                  color: _currentPage == index ? AppColors.primary : Colors.white.changeOpacity(0.5),
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     if (_currentPage == index)
                                       BoxShadow(
-                                        color: AppColors.primary.withOpacity(0.3),
+                                        color: AppColors.primary.changeOpacity(0.3),
                                         blurRadius: 4,
                                         spreadRadius: 1,
                                       ),
@@ -134,12 +137,12 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                   onTap: () => Get.back(),
                   child: Container(
                     margin: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 8)],
                     ),
-                    child: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                    child: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                   ),
                 ),
               ),
@@ -170,7 +173,7 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.star_rounded, color: AppColors.primary, size: 16),
+                                Icon(Icons.star_rounded, color: AppColors.primary, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
                                   farm.rating.toStringAsFixed(1),
@@ -190,7 +193,7 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                       // Location
                       Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, color: AppColors.grey, size: 16),
+                          Icon(Icons.location_on_outlined, color: AppColors.grey, size: 16),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -254,7 +257,7 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.location_pin, size: 42, color: AppColors.primary),
+                            Icon(Icons.location_pin, size: 42, color: AppColors.primary),
                             const SizedBox(height: 8),
                             Text(
                               farm.location,
@@ -271,7 +274,7 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                       // Price row
                       Row(
                         children: [
-                          const Icon(Icons.currency_rupee, color: AppColors.primary, size: 22),
+                          Icon(Icons.currency_rupee, color: AppColors.primary, size: 22),
                           Text(
                             '${farm.pricePerDay.toStringAsFixed(0)} / day',
                             style: GoogleFonts.poppins(
@@ -282,6 +285,8 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 32),
+                      _buildReviewsSection(farm.id, farm.rating),
                     ],
                   ),
                 ),
@@ -296,10 +301,10 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
             right: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.white,
                 boxShadow: [
-                  BoxShadow(color: AppColors.cardShadow, blurRadius: 16, offset: Offset(0, -4)),
+                  BoxShadow(color: AppColors.cardShadow, blurRadius: 16, offset: const Offset(0, -4)),
                 ],
               ),
               child: Column(
@@ -330,20 +335,14 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
     final bookingCtrl = Get.find<BookingController>();
 
     // Date picker
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 7)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (ctx, child) => Theme(
-        data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primary),
-        ),
-        child: child!,
-      ),
+    final pickedDates = await MultiDatePickerSheet.show(
+      context,
+      title: 'Select Booking Dates',
+      initialDates: bookingCtrl.selectedDates.toList(),
     );
-    if (pickedDate == null) return;
-    bookingCtrl.selectedDate.value = pickedDate;
+    if (pickedDates == null || pickedDates.isEmpty) return;
+
+    bookingCtrl.selectedDates.assignAll(pickedDates);
 
     // Guest count dialog
     if (!context.mounted) return;
@@ -355,7 +354,7 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
       AppRoutes.bookingConfirm,
       arguments: {
         'farm': farm,
-        'date': pickedDate,
+        'dates': pickedDates,
         'guestCount': guestCountResult,
       },
     );
@@ -383,6 +382,104 @@ class _FarmDetailBodyState extends State<_FarmDetailBody> {
             onPressed: () => Navigator.pop(ctx, int.tryParse(ctrl.text) ?? current),
             child: const Text('Confirm'),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewsSection(String farmId, double averageRating) {
+    return FutureBuilder<List<ReviewModel>>(
+      future: FarmService().getFarmReviews(farmId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Text('Failed to load reviews', style: GoogleFonts.poppins(color: AppColors.error));
+        }
+        final reviews = snapshot.data ?? [];
+        if (reviews.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Reviews',
+                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Text('No reviews yet. Be the first to review!', style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary)),
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Reviews',
+                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                ),
+                const Spacer(),
+                Icon(Icons.star_rounded, color: AppColors.primary, size: 22),
+                const SizedBox(width: 4),
+                Text(
+                  averageRating.toStringAsFixed(1),
+                  style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primary),
+                ),
+                Text(
+                  ' (${reviews.length})',
+                  style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...reviews.map((review) => _buildReviewCard(review)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewCard(ReviewModel review) {
+    final dateStr = '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < review.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: AppColors.primary,
+                    size: 16,
+                  );
+                }),
+              ),
+              const Spacer(),
+              Text(
+                dateStr,
+                style: GoogleFonts.poppins(fontSize: 11, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          if (review.reviewText != null && review.reviewText!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.reviewText!,
+              style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textPrimary),
+            ),
+          ],
         ],
       ),
     );

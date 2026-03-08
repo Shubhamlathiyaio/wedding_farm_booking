@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wedding_farm_booking/app/utils/constants/app_colors.dart';
+import 'package:wedding_farm_booking/app/utils/helpers/extensions.dart';
 
-import '../app/utils/constants/app_colors.dart';
 import 'payment_verification_detail_screen.dart';
 
 class OwnerPaymentHistoryScreen extends StatefulWidget {
@@ -53,7 +54,7 @@ class _OwnerPaymentHistoryScreenState extends State<OwnerPaymentHistoryScreen> {
       body: RefreshIndicator(
         onRefresh: _fetchHistory,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            ? Center(child: CircularProgressIndicator(color: AppColors.primary))
             : _history.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
@@ -74,7 +75,7 @@ class _OwnerPaymentHistoryScreenState extends State<OwnerPaymentHistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history, size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
+          Icon(Icons.history, size: 64, color: AppColors.textSecondary.changeOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
             'No transaction history yet',
@@ -101,7 +102,7 @@ class _OwnerPaymentHistoryScreenState extends State<OwnerPaymentHistoryScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: AppColors.cardShadow, blurRadius: 10, offset: Offset(0, 4))],
+        boxShadow: [BoxShadow(color: AppColors.cardShadow, blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -110,8 +111,8 @@ class _OwnerPaymentHistoryScreenState extends State<OwnerPaymentHistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text('Customer: $customerName', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            Text(DateFormat('dd MMM yyyy, hh:mm a').format(date), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Text('Customer: $customerName', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            Text(DateFormat('dd MMM yyyy, hh:mm a').format(date), style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           ],
         ),
         trailing: Column(
@@ -122,7 +123,7 @@ class _OwnerPaymentHistoryScreenState extends State<OwnerPaymentHistoryScreen> {
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: statusColor.changeOpacity(0.1), borderRadius: BorderRadius.circular(6)),
               child: Text('$type - ${status.toUpperCase()}', style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
             ),
           ],
